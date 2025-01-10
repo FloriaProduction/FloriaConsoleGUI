@@ -6,23 +6,27 @@ def readme():
 
 setup(
     name='FloriaConsoleGUI',
-    version='1.0.1',
+    version='1.0.3',
     author='FloriaProduction',
     author_email='FloriaProduction@yandex.ru',
     description='Framework for console GUI apps',
     long_description=readme(),
     long_description_content_type='text/markdown',
     license='Apache-2.0',
-    url='https://pypi.org/project/FloriaConsoleGUI/',
+    project_urls={
+        "Documentation": 'https://FloriaConsoleGUI.github.io',
+        "Source": 'https://github.com/FloriaProduction/FloriaConsoleGUI',
+    },
     packages=find_packages(),
     install_requires=['readchar'],
     classifiers=[
         'Programming Language :: Python :: 3.12',
+        'License :: OSI Approved :: Apache Software License',
+        'Environment :: Console',
+        "Intended Audience :: Developers",
+        "Typing :: Typed"
     ],
     keywords='python console gui ui ux',
-    project_urls={
-        'Documentation': 'https://FloriaConsoleGUI.github.io'
-    },
     zip_safe=True,
     python_requires='>=3.12'
 )
