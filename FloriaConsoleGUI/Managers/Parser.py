@@ -58,7 +58,7 @@ class Parser:
         def parseWidgets(data: dict[str, dict[str, any]]) -> list[Widget]:
             widgets: list[Widget] = []
             for widget_data in data:
-                widget: type[Widget] = getattr(sys.modules['ConsoleGUI.Graphic.Widgets'], widget_data['class'])
+                widget: type[Widget] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Widgets'], widget_data['class'])
                 
                 for attr in widget_data:
                     if attr not in widget.__init__.__annotations__:
@@ -73,7 +73,7 @@ class Parser:
                 widgets.append(widget(**widget_data))
             return widgets
                 
-        window: type[Window] = getattr(sys.modules['ConsoleGUI.Graphic.Windows'], window_data['class'])
+        window: type[Window] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Windows'], window_data['class'])
         
         if 'widgets' in window_data:
             window_data['widgets'] = parseWidgets(window_data['widgets'])
