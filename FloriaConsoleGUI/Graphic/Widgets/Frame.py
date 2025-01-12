@@ -10,15 +10,16 @@ class Frame(Container):
     def __init__(
         self, 
         size: Union[Vec2[int], Iterable[int]] = None, 
+        auto_size: bool = False,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str, None] = None,
         name: Union[str, None] = None,
         widgets: Union[Iterable[Widget], Widget] = None, 
         *args, **kwargs
     ):
-        super().__init__(size, offset_pos, clear_pixel, name, widgets, *args, **kwargs)
-
-        self._offset_widgets = Vec3(1, 1, 0)
+        super().__init__(size, auto_size, offset_pos, clear_pixel, name, widgets, *args, **kwargs)
+        self._indent_size = Vec2(2, 2)
+        self._offset_pos_widgets = Vec3(1, 1, 0)
         
     def refresh(self):
         super().refresh()

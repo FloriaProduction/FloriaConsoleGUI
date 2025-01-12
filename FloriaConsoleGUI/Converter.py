@@ -29,9 +29,7 @@ def toPixel(data: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3
     elif isinstance(data, Pixel | Iterable):
         return data if isinstance(data, Pixel) else Pixel(*data)
 
-    raise ValueError(f'data({data}) is not Pixel | tuple')
-         
-
+    raise ValueError(f'data({data}) is not Pixel | Iterable')
 
 def toListWidgets(data: Union[Iterable[Widget], Widget, None]) -> list[Widget]:
     if data is None:

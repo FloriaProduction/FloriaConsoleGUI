@@ -6,8 +6,6 @@ from ..Graphic import Pixel
 
 from .. import Converter
 
-_T = TypeVar('_T')
-
 class Widget:
     _widgets: dict[str, 'Widget'] = {}
     _counter: Counter = Counter()
@@ -17,11 +15,19 @@ class Widget:
         return cls._widgets.get(name)
     
     @classmethod
+    def tryGetByName(cls, name: str) -> tuple[bool, Union['Widget', None]]:
+        widget = cls.getByName(name)
+        return (
+            widget is not None,
+            widget
+        )
+    
+    @classmethod
     def removeAll(cls):
         cls._widgets.clear()
     
     @classmethod
-    def generateNewWidgetWithName(cls, widget_class: _T, *args, **kwargs) -> _T:
+    def generateNewWidgetWithName(cls, widget_class: 'Widget', *args, **kwargs) -> 'Widget':
         if not issubclass(widget_class, cls):
             raise ValueError(f'Class "{widget_class.__name__}" is not subclass {cls.__name__}')
         
@@ -42,15 +48,24 @@ class Widget:
         name: Union[str, None] = None,
         *args, **kwargs
     ):
-        self._clear_pixel: Union[Pixel, None] = Converter.toPixel(clear_pixel)
-        self._size = Converter.toVec2(size)
+        ''' events '''
+        self._set_refreshing_event: Event = Event()
+        self._resize_event: Event = Event()
+        
+        ''' size and pos '''
+        self.size = Converter.toVec2(size)
         self._offset_pos = Converter.toVec3(offset_pos)
+        
+        ''' pixels '''
+        self._clear_pixel: Union[Pixel, None] = Converter.toPixel(clear_pixel)
+        
+        ''' buffers '''
         self._buffer: Buffer[Pixel] = None
         
+        ''' flags '''
         self._flag_refresh: bool = True
         
-        self._set_refreshing_event: Event = Event()
-        
+        ''' others '''
         self._name = name
         if self._name is not None:
             if self._name in self.__class__._widgets:
@@ -63,29 +78,55 @@ class Widget:
     
     def refresh(self):
         self._buffer = Buffer(*self._size, self._clear_pixel)
+        self._flag_refresh = False
     
     def render(self) -> Buffer[Pixel]:
         if self._flag_refresh:
             self.refresh()
-            self._flag_refresh = False
             
         return self._buffer if self._buffer is not None else Buffer.empty
 
     @property
     def offset_pos(self) -> Vec3[int]:
         return self._offset_pos
+    @property
+    def offset_x(self) -> int:
+        return self.offset_pos.x
+    @property
+    def offset_y(self) -> int:
+        return self.offset_pos.y
+    @property
+    def offset_z(self) -> int:
+        return self.offset_pos.z
     
     @property
     def size(self) -> Vec2:
         return self._size
     @size.setter
-    def size(self, size: Vec2):
-        self._size = (size if isinstance(size, Vec2) else Vec2(*size)) if size is not None else Vec2(0, 0)
+    def size(self, value: Vec2):
+        self._size = Converter.toVec2(value)
+        self._size.change_event.add(self.setRefresh)
+        self._resize_event.invoke()
         self.setRefresh()
-    
+    @property
+    def width(self) -> int:
+        return self.size.x
+    @width.setter
+    def width(self, value: int):
+        self.size.x = value
+    @property
+    def height(self) -> int:
+        return self.size.y
+    @height.setter
+    def height(self, value: int):
+        self.size.y = value
+        
     @property
     def set_refresh_event(self) -> Event:
         return self._set_refreshing_event
+    @property
+    def resize_event(self) -> Event:
+        return self._resize_event
     
     def __str__(self, **kwargs):
         kwargs.update({

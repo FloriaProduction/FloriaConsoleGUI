@@ -6,6 +6,7 @@ from ..Classes import Buffer, Vec2, Anchor, Orientation
 from ..Log import Log
 from ..GVars import GVars
 from .KeyboardManager import KeyboardManager, posix_key
+from .. import Func
 
 class WindowManager:
     _window_queue: list[Window] = []
@@ -55,13 +56,17 @@ class WindowManager:
     def render(cls) -> Union[Buffer[Pixel], None]:
         if len(cls._window_queue) == 0:
             return None
-    
+
+        windows: list[tuple[any]] = [
+            ((window.offset_pos.x, window.offset_pos.y), window.render()) for window in sorted(cls._window_queue, key=lambda window: window.offset_z)
+        ]
+        
         cls._update_buffer_size()
         
         buffer = Buffer(*cls._buffer_size, Pixel.empty)
         
-        for window in sorted(cls._window_queue, key=lambda window: window.offset_z, reverse=True):
-            buffer.paste(window.offset_pos.x, window.offset_pos.y, window.render())
+        for window in windows:
+            buffer.paste(*window[0], window[1])
         
         return buffer
 
@@ -89,13 +94,6 @@ class WindowManager:
     
     @classmethod
     def _update_buffer_size(cls):
-        max_width = max_height = 0
-        for window in cls._window_queue:
-            width, height = window.offset_x + window.width, window.offset_y + window.height
-            if width > max_width:
-                max_width = width
-            if height > max_height:
-                max_height = height
-        cls._buffer_size = Vec2(max_width, max_height)
+        cls._buffer_size = Func.calculateSizeByItems(cls._window_queue)
     
 KeyboardManager.addHandlerToPressedEvent(WindowManager.pressed)

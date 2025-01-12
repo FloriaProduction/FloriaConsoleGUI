@@ -8,11 +8,15 @@ class Buffer(Generic[_T]):
     empty = None
     
     def __init__(self, width: int, height: int, defualt_value: _T = None, data: Union[Iterable[_T], None] = None):
+        if width < 0 or height < 0:
+            raise ValueError(f'Width or height cannot be less than 0')
         self._width = width
         self._height = height
         self._defualt_value = defualt_value
         
         if data is not None:
+            if len(data) != width*height:
+                raise ValueError(f'The parameters for width({width}) and height({height}) do not match the len of data({len(data)})')
             self._data: list[_T] = list(data)  
         else:
             self.fill()
@@ -22,7 +26,7 @@ class Buffer(Generic[_T]):
         '''
             func: function(self_value, other_value) -> new_value
         '''
-        if buffer is None:
+        if buffer is None or buffer.size.x == 0 or buffer.size.y == 0:
             return
         
         for y in range(buffer.height):

@@ -59,7 +59,7 @@ class KeyboardManager:
         char = readchar.readkey()
         char_mod = char.lower()[0]
         if GVars.DEBUG_SHOW_INPUT_KEY:
-            Log.writeNotice(f'"{char.encode()}" pressed', cls)
+            Log.writeNotice(f'pressed {char.encode()}', cls)
         
         for key, event_names in cls._event_binds.items():
             if key == char or key == char_mod:

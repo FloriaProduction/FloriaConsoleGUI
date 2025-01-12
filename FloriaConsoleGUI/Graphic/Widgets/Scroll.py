@@ -109,7 +109,7 @@ class Scroll(Widget):
             self.setRefresh()
         
         self._scroll = value
-        self._scroll.update_event.add(_valide_scroll)
+        self._scroll.change_event.add(_valide_scroll)
         self.setRefresh()
     
         

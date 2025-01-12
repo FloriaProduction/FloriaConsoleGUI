@@ -15,6 +15,7 @@ class Label(Widget):
         name: Union[str, None] = None,
         min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
         anchor: Union[Anchor, str] = Anchor.left,
+        tab_length: int = 4,
         *args, **kwargs
     ):
         super().__init__((0, 0), offset_pos, clear_pixel, name, *args, **kwargs)
@@ -22,6 +23,7 @@ class Label(Widget):
         self._anchor = Converter.toAnchor(anchor)
         self._min_size = Converter.toVec2(min_size, Vec2(None, None), True)
         self._lines: tuple[str] = ()
+        self._tab_length = tab_length
         
         self.text = text
     
@@ -39,7 +41,7 @@ class Label(Widget):
         return '\n'.join(self._lines)
     @text.setter
     def text(self, value: str):
-        text = str(value)
+        text = str(value).replace('\t', ' '*self._tab_length)
         self._lines = tuple([
             Func.setTextAnchor(
                 line, 
@@ -51,7 +53,7 @@ class Label(Widget):
             ]
         ])
         
-        self._size = Vec2(
+        self.size = Vec2(
             max(map(len, self._lines)), 
             len(self._lines)
         )

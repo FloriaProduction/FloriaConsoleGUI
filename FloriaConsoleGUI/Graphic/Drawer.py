@@ -1,3 +1,5 @@
+from typing import Union
+
 from ..Classes import Buffer, Vec3
 from .Pixel import Pixel
 from ..GVars import GVars
@@ -23,6 +25,9 @@ class Drawer:
     
     @classmethod
     def frame(cls, width: int, height: int, front_color: Vec3, back_color: Vec3) -> Buffer[Pixel]:        
+        if width == 0 or height == 0:
+            return Buffer.empty
+        
         key = cls._genKey(func='frame', width=width, height=height, back_color=back_color, front_color=front_color)
         
         if key not in cls._cache:
@@ -46,14 +51,14 @@ class Drawer:
         return cls._cache[key]
     
     @classmethod
-    def mergeFramePixels(cls, pixel1: FramePixel, pixel2: FramePixel) -> FramePixel:       
+    def mergeFramePixels(cls, pixel1: Union[FramePixel, None], pixel2: Union[FramePixel, None]) -> FramePixel:       
         def inArr(*args) -> bool:
             for symbol in args:
                 if symbol not in arr:
                     return False
             return True
         
-        if pixel2 is None:
+        if pixel2 is None or pixel1 is None:
             return pixel1
                
         if not (isinstance(pixel1, FramePixel) and isinstance(pixel2, FramePixel)):

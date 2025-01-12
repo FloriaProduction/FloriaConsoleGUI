@@ -30,7 +30,7 @@ class Vec2(Generic[_T2]):
         self._setValue('_y', value)
     
     @property
-    def update_event(self) -> Event:
+    def change_event(self) -> Event:
         return self._update_event
         
     def __len__(self) -> int:
@@ -51,7 +51,7 @@ class Vec2(Generic[_T2]):
 
     @staticmethod
     def _calc(arr1: Iterable, arr2: Iterable, func: Callable[[any, any], any] = lambda x, y: x + y) -> tuple:
-        if len(arr1) != len(arr2):
+        if len(arr1) > len(arr2):
             raise ValueError()
         
         return tuple([func(arr1[i], arr2[i]) for i in range(len(arr1))])
@@ -116,3 +116,21 @@ class Vec3(Vec2, Generic[_T3]):
     @z.setter
     def z(self, value: _T3):
         self._setValue('_z', value)
+
+_T4 = TypeVar('_T4')
+class Vec4(Vec3, Generic[_T4]):
+    def __init__(self, x: _T4, y: _T4, z: _T4, w: _T4):
+        super().__init__(x, y, z)
+        self._w = w
+        
+        self._prop_for_iter = (*self._prop_for_iter, '_w')
+    
+    def __str__(self):
+        return f'Vec4({self._x};{self._y};{self._z};{self._w})'
+    
+    @property
+    def w(self) -> _T4:
+        return self._w
+    @w.setter
+    def w(self, value: _T4):
+        self._setValue('_w', value)

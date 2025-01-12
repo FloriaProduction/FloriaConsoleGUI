@@ -8,6 +8,9 @@ from .WindowManager import WindowManager
 from ..Graphic import Widget, Window
 from ..Classes import Event
 
+from ..Graphic.Windows import *
+from ..Graphic.Widgets import *
+
 class Parser:
     _file_path: Union[str, None] = None
     _file_update_time = None
@@ -31,7 +34,7 @@ class Parser:
                 )
                 
             cls._builded_event.invoke()
-            Log.writeOk('windows builded!')
+            Log.writeOk('windows builded!', cls)
         except:
             WindowManager.closeAll()
             Widget.removeAll()
@@ -50,17 +53,14 @@ class Parser:
     
     @classmethod
     def buildWindow(cls, window_data: dict[str, any]) -> Window:
-        '''
-            data = json
-        '''
-        def parseWidgets(data: dict[str, dict[str, any]]) -> list[Widget]:
+        def parseWidgets(data: list[dict[str, any]]) -> list[Widget]:
             widgets: list[Widget] = []
             for widget_data in data:
                 widget: type[Widget] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Widgets'], widget_data['class'])
-                
+                widget_data.pop('class')
                 for attr in widget_data:
                     if attr not in widget.__init__.__annotations__:
-                        print(f'skipped: {attr}')
+                        Log.writeNotice(f'widget "{widget.__name__}" attribute "{attr}" skipped', cls)
                         continue
                     
                     attr_value = widget_data[attr]
