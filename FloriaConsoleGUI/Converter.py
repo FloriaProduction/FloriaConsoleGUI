@@ -33,7 +33,9 @@ def toPixel(data: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3
          
 
 
-def toListWidgets(data: Union[Iterable[Widget], Widget]) -> list[Widget]:
+def toListWidgets(data: Union[Iterable[Widget], Widget, None]) -> list[Widget]:
+    if data is None:
+        return []
     if isinstance(data, type(Widget)):
         return [data]
     if not isinstance(data, Iterable):

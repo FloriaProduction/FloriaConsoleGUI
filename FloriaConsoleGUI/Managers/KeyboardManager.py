@@ -5,11 +5,20 @@ from typing import Union, Callable
 from ..GVars import GVars
 from ..Log import Log
 
-from ..Classes.Event import Event
+from ..Classes.Event import Event, EventKwargs
 
 class KeyboardManager:
     _events: dict[str, Event] = {}
     _event_binds: dict[str, set[str]] = {}
+    
+    _pressed_event: EventKwargs = EventKwargs()
+    
+    @classmethod
+    def addHandlerToPressedEvent(cls, func: Callable[[any], None]):
+        '''
+            func like this: `func(char: chr, **kwargs) -> None`
+        '''
+        cls._pressed_event.add(func)
     
     @classmethod
     def registerEvent(cls, event_name: str, key: Union[str, None] = None):
@@ -47,12 +56,14 @@ class KeyboardManager:
 
     @classmethod
     def simulation(cls):
-        char = readchar.readchar()
+        char = readchar.readkey()
         char_mod = char.lower()[0]
         if GVars.DEBUG_SHOW_INPUT_KEY:
-            Log.writeNotice(f'"{char}" pressed', cls)
+            Log.writeNotice(f'"{char.encode()}" pressed', cls)
         
         for key, event_names in cls._event_binds.items():
             if key == char or key == char_mod:
                 for event_name in event_names:
                     cls._events[event_name].invoke()
+        
+        cls._pressed_event.invoke(char=char)

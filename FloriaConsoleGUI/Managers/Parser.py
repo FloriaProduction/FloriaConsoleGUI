@@ -22,12 +22,11 @@ class Parser:
         cls._file_update_time = os.path.getmtime(path)
         
         WindowManager.closeAll()
-        Window.removeAll()
         Widget.removeAll()
         
         try:
             for window_data in Func.readJson(path):
-                WindowManager.new(
+                WindowManager.openNewWindow(
                     cls.buildWindow(window_data)
                 )
                 
@@ -35,7 +34,6 @@ class Parser:
             Log.writeOk('windows builded!')
         except:
             WindowManager.closeAll()
-            Window.removeAll()
             Widget.removeAll()
             Log.writeError()
     

@@ -1,13 +1,16 @@
 from random import randint as rd
-from typing import Union, Iterable
+from typing import Union, Iterable, TypeVar
 
-from ..Classes import Buffer, Vec2, Vec3, Event
+from ..Classes import Buffer, Vec2, Vec3, Event, Counter
 from ..Graphic import Pixel
 
 from .. import Converter
 
+_T = TypeVar('_T')
+
 class Widget:
     _widgets: dict[str, 'Widget'] = {}
+    _counter: Counter = Counter()
     
     @classmethod
     def getByName(cls, name: str) -> Union['Widget', None]:
@@ -16,6 +19,20 @@ class Widget:
     @classmethod
     def removeAll(cls):
         cls._widgets.clear()
+    
+    @classmethod
+    def generateNewWidgetWithName(cls, widget_class: _T, *args, **kwargs) -> _T:
+        if not issubclass(widget_class, cls):
+            raise ValueError(f'Class "{widget_class.__name__}" is not subclass {cls.__name__}')
+        
+        class_name = widget_class.__name__
+        cls._counter.add(class_name)
+        
+        kwargs.update({
+            "name": f'{class_name}_{cls._counter.get(class_name)}'
+        })
+        
+        return widget_class(*args, **kwargs)
     
     def __init__(
         self, 
@@ -32,17 +49,17 @@ class Widget:
         
         self._flag_refresh: bool = True
         
-        self._refreshing_event: Event = Event()
+        self._set_refreshing_event: Event = Event()
         
         self._name = name
         if self._name is not None:
             if self._name in self.__class__._widgets:
-                raise ValueError(f'name "{self._name}" already used')
+                raise ValueError(f'Widget name "{self._name}" already used')
             self.__class__._widgets[self._name] = self
     
     def setRefresh(self):
         self._flag_refresh = True
-        self._refreshing_event.invoke()
+        self._set_refreshing_event.invoke()
     
     def refresh(self):
         self._buffer = Buffer(*self._size, self._clear_pixel)
@@ -68,7 +85,12 @@ class Widget:
     
     @property
     def set_refresh_event(self) -> Event:
-        return self._refreshing_event
+        return self._set_refreshing_event
     
-    def addOffsetPos(self, pos: Vec2):
-        self._offset_pos += pos
+    def __str__(self, **kwargs):
+        kwargs.update({
+            "name": self._name,
+            "size": self._size,
+            "offset_pos": self._offset_pos
+        })
+        return f'{self.__class__.__name__}({'; '.join([f'{key}:{value}' for key, value in kwargs.items()])})'

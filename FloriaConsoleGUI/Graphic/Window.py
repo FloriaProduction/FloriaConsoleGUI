@@ -7,17 +7,7 @@ from .Widget import Widget
 from .Drawer import Drawer
 from .. import Converter
 
-class Window:
-    _windows: dict[str, 'Window'] = {}
-    
-    @classmethod
-    def getWindow(cls, name: str) -> Union['Window', None]:
-        return cls._windows.get(name)
-    
-    @classmethod
-    def removeAll(cls):
-        cls._windows.clear()
-    
+class Window:    
     def __init__(
             self, 
             size: Union[Vec2[int], Iterable[int]] = None, 
@@ -43,14 +33,6 @@ class Window:
         self._close_event: Event = Event()
         
         self._name = name
-        if self._name is not None:
-            if self._name in self.__class__._windows:
-                raise ValueError(f'name "{self._name}" already used')
-            self.__class__._windows[self._name] = self
-    
-    def __del__(self):
-        if self.name is not None:
-            self.__class__._windows.pop(self.name)
     
     def addWidget(self, widget: Widget):
         self._widgets.append(widget)
@@ -107,3 +89,9 @@ class Window:
     @property
     def name(self) -> Union[str, None]:
         return self._name
+    @property
+    def open_event(self) -> Event:
+        return self._open_event
+    @property
+    def close_event(self) -> Event:
+        return self._close_event
