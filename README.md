@@ -52,11 +52,7 @@ def simulation():
 
 
 if __name__ == '__main__': 
-    GVars.FPS = 30
-    GVars.SPS = 30
-    
     Core.init()
-    
     Core.start()
     Core.term()
 ```
@@ -89,11 +85,7 @@ def simulation():
 
 
 if __name__ == '__main__': 
-    GVars.FPS = 30
-    GVars.SPS = 30
-    
     Core.init()
-    
     Core.start()
     Core.term()
 ```
