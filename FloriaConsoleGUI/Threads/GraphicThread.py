@@ -3,7 +3,9 @@ import os, sys
 from ..Log import Log
 from ..Threads import BaseThread
 from ..Managers import WindowManager
-from ..Graphic import Widget, Window, Pixel, Pixels
+from ..Graphic import Pixel, Pixels
+from ..Graphic.Widgets import Widget
+from ..Graphic.Windows import Window
 from ..GVars import *
 
 class GraphicThread(BaseThread):

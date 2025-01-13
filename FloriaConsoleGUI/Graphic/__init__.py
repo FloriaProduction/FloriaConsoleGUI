@@ -1,4 +1,13 @@
+from .BaseGraphicObject import BaseGraphicObject, BaseGraphicContainerObject
 from .Pixel import Pixel, Pixels
-from .Window import Window
-from .Widget import Widget
+from . import Windows
+from . import Widgets
 from .Drawer import Drawer
+
+__all__ = [
+    'Pixel', 'Pixels'
+    'BaseGraphicObject',
+    'Windows', 
+    'Widgets',
+    'Drawer'
+]

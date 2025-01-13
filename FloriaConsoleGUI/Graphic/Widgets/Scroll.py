@@ -2,7 +2,7 @@ from typing import Union, Iterable
 
 from ...Classes import Vec2, Vec3, Buffer
 from .Container import Container
-from ..Widget import Widget
+from .Widget import Widget
 from ..Pixel import Pixel, Pixels
 from ... import Converter
 
@@ -19,7 +19,7 @@ class Scroll(Widget):
     ):
         super().__init__(size, offset_pos, clear_pixel, name, *args, **kwargs)
 
-        self._widgets: list[Widget] = Converter.toListWidgets(widgets)
+        self._widgets: list[Widget] = Converter.toListObjects(widgets)
 
         self._full_buffer: Union[Buffer[Pixel], None] = None
         self._updateFullBuffer()
@@ -106,11 +106,11 @@ class Scroll(Widget):
         def _valide_scroll():
             self._scroll._x = min(max(self._scroll.x, 0), max(self._full_buffer.width - self.size.x, 0))
             self._scroll._y = min(max(self._scroll.y, 0), max(self._full_buffer.height - self.size.y, 0))
-            self.setRefresh()
+            self.setFlagRefresh()
         
         self._scroll = value
         self._scroll.change_event.add(_valide_scroll)
-        self.setRefresh()
+        self.setFlagRefresh()
     
         
 

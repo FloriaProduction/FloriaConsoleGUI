@@ -3,17 +3,23 @@ from datetime import datetime, date
 import json
 
 from .Classes import Anchor, Vec2, Vec3
-from .Graphic import Window, Widget
+from .Graphic.Pixel import Pixel
+from .Graphic.Widgets import Widget
+from .Graphic.Windows import Window
 
-def setTextAnchor(text: str, anchor: Anchor, width: Union[int, None] = None, fillchar: chr = ' '):
+def setTextAnchor(text: str, anchor: Anchor, width: Union[int, None] = None, fillchar: chr = ' ', crop: bool = False):
     target_width = width if width is not None else len(text)
+    result = '?'
     match anchor:
         case Anchor.center:
-            return text.center(target_width, fillchar)
+            result = text.center(target_width, fillchar)
         case Anchor.right:
-            return text.rjust(target_width, fillchar)
+            result = text.rjust(target_width, fillchar)
         case _:
-            return text.ljust(target_width, fillchar)
+            result = text.ljust(target_width, fillchar)
+    if crop:
+        return result[:width]
+    return result
 
 def readFile(path: str) -> str:
     with open(path, 'r', encoding='utf-8') as file:
@@ -47,3 +53,12 @@ def calculateSizeByItems(data: list[Union[Window, Widget]]) -> tuple[Vec2[int], 
         height = max(item.offset_y + item.height, height)
     
     return Vec2(width, height)
+
+def choisePixel(*args: Pixel, **kwargs):
+    '''
+        default: Pixel = Pixel.empty
+    '''
+    for pixel in args:
+        if pixel is not None:
+            return pixel
+    return kwargs.get('default', Pixel.empty)

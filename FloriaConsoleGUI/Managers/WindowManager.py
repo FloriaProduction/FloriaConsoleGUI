@@ -1,7 +1,9 @@
 from typing import Union
 import sys
 
-from ..Graphic import Window, Pixel, Pixels, Widget
+from ..Graphic import Pixel, Pixels
+from ..Graphic.Widgets import Widget
+from ..Graphic.Windows import Window
 from ..Classes import Buffer, Vec2, Anchor, Orientation
 from ..Log import Log
 from ..GVars import GVars
@@ -11,9 +13,7 @@ from .. import Func
 class WindowManager:
     _window_queue: list[Window] = []
     _index_current_window: int = 0
-    
-    _buffer_size: Vec2[int] = Vec2(0, 0)
-    
+        
     @classmethod
     def openNewWindow(cls, window: Window, switch_current_window: bool = True):
         if window.name is not None and cls.getByName(window.name) is not None:
@@ -23,7 +23,6 @@ class WindowManager:
         if switch_current_window:
             cls._index_current_window = len(cls._window_queue) - 1
         
-        cls._update_buffer_size()
         window.open_event.invoke()
     
     @classmethod
@@ -61,9 +60,7 @@ class WindowManager:
             ((window.offset_pos.x, window.offset_pos.y), window.render()) for window in sorted(cls._window_queue, key=lambda window: window.offset_z)
         ]
         
-        cls._update_buffer_size()
-        
-        buffer = Buffer(*cls._buffer_size, Pixel.empty)
+        buffer = Buffer(*Func.calculateSizeByItems(cls._window_queue), Pixel.empty)
         
         for window in windows:
             buffer.paste(*window[0], window[1])
@@ -91,9 +88,5 @@ class WindowManager:
             cls._index_current_window = 0
         elif cls._index_current_window >= len(cls._window_queue):
             cls._index_current_window = len(cls._window_queue) - 1
-    
-    @classmethod
-    def _update_buffer_size(cls):
-        cls._buffer_size = Func.calculateSizeByItems(cls._window_queue)
     
 KeyboardManager.addHandlerToPressedEvent(WindowManager.pressed)

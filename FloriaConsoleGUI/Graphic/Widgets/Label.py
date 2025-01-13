@@ -1,6 +1,6 @@
 from typing import Union, Iterable
 
-from ..Widget import Widget
+from .Widget import Widget
 from ..Pixel import Pixel, Pixels
 from ...Classes import Vec2, Vec3, Anchor
 from ... import Func
@@ -31,7 +31,10 @@ class Label(Widget):
         super().refresh()
         for y in range(len(self._lines)):
             for x in range(len(self._lines[y])):
-                self._buffer[x, y] = Pixel.changePixel(
+                self._buffer[
+                    x + self.padding.z, 
+                    y + self.padding.x
+                ] = Pixel.changePixel(
                     self._clear_pixel if self._clear_pixel is not None else Pixels.f_white, 
                     symbol=self._lines[y][x]
                 )
@@ -58,5 +61,5 @@ class Label(Widget):
             len(self._lines)
         )
         
-        self.setRefresh()
+        self.setFlagRefresh()
 

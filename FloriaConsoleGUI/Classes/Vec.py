@@ -36,8 +36,16 @@ class Vec2(Generic[_T2]):
     def __len__(self) -> int:
         return len(self._prop_for_iter)
         
-    def __getitem__(self, index: int) -> _T2:
-        return self.__getattribute__(self._prop_for_iter[index])
+    # def __getitem__(self, index: int) -> _T2:
+    #     return self.__getattribute__(self._prop_for_iter[index])
+    
+    def __getitem__(self, index: Union[int, tuple[int]]) -> Union[tuple[_T2], _T2]:
+        if isinstance(index, int):
+            return self.__getattribute__(self._prop_for_iter[index])
+        
+        return tuple([
+            self.__getattribute__(self._prop_for_iter[i]) for i in index
+        ])
         
     def __setitem__(self, index: int, value: _T2):
         self.__setattr__(self._prop_for_iter[index], value)

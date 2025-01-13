@@ -1,6 +1,6 @@
 from typing import Union, Iterable
 
-from ..Widget import Widget
+from .Widget import Widget
 from ..Pixel import Pixel, Pixels
 from ...Classes import Vec2, Vec3, Buffer
 from ... import Converter
@@ -46,7 +46,7 @@ class ProgressBar(Widget):
     @percent.setter
     def percent(self, value: float):
         self._percent = max(min(value, 1), 0)
-        self.setRefresh()
+        self.setFlagRefresh()
         
         
 

@@ -1,4 +1,4 @@
-from ..Widget import Widget
+from .Widget import Widget
 from .Label import Label
 from .Frame import Frame
 from .Container import Container

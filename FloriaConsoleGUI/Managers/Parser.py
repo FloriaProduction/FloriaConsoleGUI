@@ -5,8 +5,10 @@ import os
 from ..Log import Log
 from .. import Func
 from .WindowManager import WindowManager
-from ..Graphic import Widget, Window
+from ..Graphic.Widgets import Widget
+from ..Graphic.Windows import Window
 from ..Classes import Event
+from ..GVars import GVars
 
 from ..Graphic.Windows import *
 from ..Graphic.Widgets import *
@@ -59,7 +61,7 @@ class Parser:
                 widget: type[Widget] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Widgets'], widget_data['class'])
                 widget_data.pop('class')
                 for attr in widget_data:
-                    if attr not in widget.__init__.__annotations__:
+                    if GVars.PARSER_SKIP_UNKNOWED_ANNOTATIONS and attr not in widget.__init__.__annotations__:
                         Log.writeNotice(f'widget "{widget.__name__}" attribute "{attr}" skipped', cls)
                         continue
                     

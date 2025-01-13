@@ -17,9 +17,9 @@ class Core:
     
     init_all_event = BaseThread.init_all_event
     
-    GraphicThread = None
-    SimulationThread = None
-    InputThread = None
+    GraphicThread = GraphicThread()
+    SimulationThread = SimulationThread()
+    InputThread = InputThread()
 
     _tasks: list[asyncio.Task] = []
     
@@ -49,10 +49,6 @@ class Core:
             
     @classmethod
     def init(cls):
-        cls.GraphicThread = GraphicThread()
-        cls.SimulationThread = SimulationThread()
-        cls.InputThread = InputThread()
-        
         KeyM.registerEvent('_close', posix_key.CTRL_C)
         KeyM.bindEvent('_close', '\x00k') # alt+f4
         KeyM.bind('_close', BaseThread.stopAll)
@@ -78,7 +74,7 @@ class Core:
             Log.writeWarning(
                 '\nThis tool is unstable due to its features and may lead to errors\nIt is strongly recommended to only change variables inside the module\nNo complex logic', cls
             )
-            time.sleep(1)
+            time.sleep(0.5)
             
         
         cls._dynamic_modules[path] = {

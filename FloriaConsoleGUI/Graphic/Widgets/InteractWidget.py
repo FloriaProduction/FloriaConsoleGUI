@@ -1,7 +1,7 @@
 from typing import Union, Iterable, Unpack
 
 from ...Classes import Vec2, Vec3, Event, Buffer
-from ..Widget import Widget
+from .Widget import Widget
 from ..Pixel import Pixel
 from ... import Converter
 
@@ -52,7 +52,7 @@ class InteractiveWidget(Widget):
     def selected(self, value: bool):
         if self._selected is not value:
             self._selected = value
-            self.setRefresh()        
+            self.setFlagRefresh()        
     
     def __str__(self, **kwargs):
         kwargs.update({

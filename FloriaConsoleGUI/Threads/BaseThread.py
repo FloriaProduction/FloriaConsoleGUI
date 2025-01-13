@@ -17,7 +17,7 @@ class BaseThread:
     
     def __init__(self, delay: float = 0.5):
         self._init_event = Event()
-        self._sim_event = Event(self.simulation, True)
+        self._sim_event = Event(self.simulation)
         self._term_event = Event(self.termination)
         self._inited = False
         self._termed = False
@@ -89,6 +89,9 @@ class BaseThread:
     @property
     def delay(self) -> float:
         return self._delay
+    @delay.setter
+    def delay(self, value: float):
+        self._delay = value
     @property
     def init_event(self) -> Event:
         return self._init_event

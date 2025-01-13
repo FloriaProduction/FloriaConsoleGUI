@@ -24,7 +24,7 @@ class Drawer:
         return '_'.join([f'{key}:{value}' for key, value in kwargs.items()])
     
     @classmethod
-    def frame(cls, width: int, height: int, front_color: Vec3, back_color: Vec3) -> Buffer[Pixel]:        
+    def frame(cls, width: int, height: int, front_color: Union[Vec3, None], back_color: Union[Vec3, None]) -> Buffer[Pixel]:        
         if width == 0 or height == 0:
             return Buffer.empty
         
@@ -58,7 +58,7 @@ class Drawer:
                     return False
             return True
         
-        if pixel2 is None or pixel1 is None:
+        if pixel2 is None:
             return pixel1
                
         if not (isinstance(pixel1, FramePixel) and isinstance(pixel2, FramePixel)):
