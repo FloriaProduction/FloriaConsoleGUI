@@ -21,8 +21,7 @@ pip install FloriaConsoleGUI --upgrade
 ```python
 from random import random as rdf
 
-from FloriaConsoleGUI.Core import Core
-from FloriaConsoleGUI.GVars import GVars
+from FloriaConsoleGUI import *
 from FloriaConsoleGUI.Graphic.Widgets import *
 from FloriaConsoleGUI.Graphic.Windows import *
 from FloriaConsoleGUI.Managers import *
@@ -68,8 +67,7 @@ if __name__ == '__main__':
 `main.py`:
 
 ```python
-from FloriaConsoleGUI.Core import Core
-from FloriaConsoleGUI.GVars import GVars
+from FloriaConsoleGUI import *
 from FloriaConsoleGUI.Managers import Parser
 
 
