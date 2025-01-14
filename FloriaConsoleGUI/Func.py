@@ -1,11 +1,13 @@
 from typing import Union, Callable
 from datetime import datetime, date
 import json
+import time
 
-from .Classes import Anchor, Vec2, Vec3
+from .Classes import Anchor, Vec2, Vec3, Buffer
 from .Graphic.Pixel import Pixel
 from .Graphic.Widgets import Widget
 from .Graphic.Windows import Window
+
 
 def setTextAnchor(text: str, anchor: Anchor, width: Union[int, None] = None, fillchar: chr = ' ', crop: bool = False):
     target_width = width if width is not None else len(text)
@@ -62,3 +64,22 @@ def choisePixel(*args: Pixel, **kwargs):
         if pixel is not None:
             return pixel
     return kwargs.get('default', Pixel.empty)
+
+
+_every_dict: dict[str, list[float, float]] = {}
+def every(marker: str, delay: float, first_true: bool = False) -> bool:
+    current_time = time.perf_counter()
+    marker_data = _every_dict.get(marker)
+    
+    if marker_data is None:
+        _every_dict[marker] = [
+            current_time,
+            delay
+        ]
+        return first_true
+
+    elif sum(marker_data) < current_time:
+        _every_dict[marker] = [current_time, delay]
+        return True
+    return False
+    

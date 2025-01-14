@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='FloriaConsoleGUI',
-    version='1.0.6',
+    version='1.0.7',
     author='FloriaProduction',
     author_email='FloriaProduction@yandex.ru',
     description='Framework for console GUI apps',

@@ -1,8 +1,9 @@
 from random import randint as rd
 from typing import Union, Iterable, TypeVar
 
-from .. import BaseGraphicObject, Pixel
-from ...Classes import Buffer, Vec2, Vec3, Event, Counter
+from ..BaseGraphicObject import BaseGraphicObject
+from ..Pixel import Pixel
+from ...Classes import Buffer, Vec2, Vec3, Vec4, Event, Counter
 
 from ... import Converter
 
@@ -43,6 +44,7 @@ class Widget(BaseGraphicObject):
     def __init__(
         self,
         size: Union[Vec2[int], Iterable[int]] = None,
+        padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
@@ -50,6 +52,7 @@ class Widget(BaseGraphicObject):
         ):
         super().__init__(
             size=size, 
+            padding=padding,
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
             name=name, 

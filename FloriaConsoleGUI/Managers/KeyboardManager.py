@@ -2,7 +2,7 @@ import readchar
 from readchar import _posix_key as posix_key
 from typing import Union, Callable
 
-from ..GVars import GVars
+from ..Config import Config
 from ..Log import Log
 
 from ..Classes.Event import Event, EventKwargs
@@ -58,7 +58,7 @@ class KeyboardManager:
     def simulation(cls):
         char = readchar.readkey()
         char_mod = char.lower()[0]
-        if GVars.DEBUG_SHOW_INPUT_KEY:
+        if Config.DEBUG_SHOW_INPUT_KEY:
             Log.writeNotice(f'pressed {char.encode()}', cls)
         
         for key, event_names in cls._event_binds.items():

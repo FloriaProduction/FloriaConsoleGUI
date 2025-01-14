@@ -1,12 +1,12 @@
-from typing import Union
+from typing import Union, Iterable
 import sys
 
-from ..Graphic import Pixel, Pixels
+from ..Graphic.Pixel import Pixel, Pixels
 from ..Graphic.Widgets import Widget
 from ..Graphic.Windows import Window
 from ..Classes import Buffer, Vec2, Anchor, Orientation
 from ..Log import Log
-from ..GVars import GVars
+from ..Config import Config
 from .KeyboardManager import KeyboardManager, posix_key
 from .. import Func
 
@@ -31,10 +31,14 @@ class WindowManager:
         cls._normalizeIndexCurrentWindow()
     
     @classmethod
-    def closeAll(cls):       
-        for window in cls._window_queue[::-1]:
+    def closeAll(cls, except_names: Iterable[str] = []):
+        windows = cls._window_queue[::-1].copy()
+        
+        for window in windows:
+            if window.name in except_names:
+                continue
             window.close_event.invoke()
-        cls._window_queue.clear()
+            cls._window_queue.remove(window)
     
     @classmethod
     def getByName(cls, name: str) -> Union[Window, None]:
@@ -44,6 +48,12 @@ class WindowManager:
     
     @classmethod
     def getCurrent(cls) -> Union[Window, None]:
+        '''
+            if count(windows) == 0
+                return 'None'
+            else
+                return `windows[index_current_window]`
+        '''
         if len(cls._window_queue) == 0:
             return None
         
@@ -53,6 +63,13 @@ class WindowManager:
     
     @classmethod
     def render(cls) -> Union[Buffer[Pixel], None]:
+        '''
+            if count(windows) == 0
+                return `None`
+            else
+                return `Buffer[Pixel]`
+        '''
+        
         if len(cls._window_queue) == 0:
             return None
 

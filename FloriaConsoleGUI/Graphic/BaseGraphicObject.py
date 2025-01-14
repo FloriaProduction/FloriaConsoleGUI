@@ -9,9 +9,12 @@ class BaseGraphicObject:
     def __init__(
         self,
         size: Union[Vec2[int], Iterable[int]] = None,
+        padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
+        always_refresh: bool = False,
+        always_parent_refresh: bool = False,
         *args, **kwargs
         ):
         
@@ -27,7 +30,7 @@ class BaseGraphicObject:
         ''' size and pos '''
         self._offset_pos = Converter.toVec3(offset_pos)
         self._size = Converter.toVec2(size)
-        self._padding: Vec4[int] = Vec4(0, 0, 0, 0)
+        self._padding: Vec4[int] = Converter.toVec4(padding)
         
         ''' buffers '''
         self._buffer: Buffer[Pixel] = Buffer.empty
@@ -40,19 +43,21 @@ class BaseGraphicObject:
         
         ''' other '''
         self._name = name
+        self._always_refresh = always_refresh
+        self._always_parent_refresh = always_parent_refresh
 
 
     def refresh(self):
         self._buffer = Buffer(
-            self.size.x + sum(self.padding[2, 3]),
-            self.size.y + sum(self.padding[0, 1]),
+            self.width + self.padding.left + self.padding.right,
+            self.height + self.padding.top + self.padding.bottom,
             self.clear_pixel
         )
         
         self._flag_refresh = False
     
     def render(self) -> Buffer[Pixel]:
-        if self._flag_refresh:
+        if self._flag_refresh or self._always_refresh or self._always_parent_refresh:
             self.refresh()
         return self._buffer
     
@@ -63,9 +68,11 @@ class BaseGraphicObject:
     
     def setOffsetPos(self, value: Vec3[int]):
         self._offset_pos = value
+    def getOffsetPos(self) -> Vec3[int]:
+        return self._offset_pos
     @property
     def offset_pos(self) -> Vec3[int]:
-        return self._offset_pos
+        return self.getOffsetPos()
     @offset_pos.setter
     def offset_pos(self, value: Vec3[int]):
         self.setOffsetPos(value)
@@ -94,24 +101,26 @@ class BaseGraphicObject:
         value.change_event.add(
             self.resize_event.invoke
         )
+    def getSize(self) -> Vec2[int]:
+        return self._size
     @property
     def size(self) -> Vec2[int]:
-        return self._size
+        return self.getSize()
     @size.setter
     def size(self, value: Vec2[int]):
         self.setSize(value)
     @property
     def width(self) -> int:
-        return self.size.x
+        return self.size.width
     @width.setter
     def width(self, value: int):
-        self.size.x = value
+        self.size.width = value
     @property
     def height(self) -> int:
-        return self.size.y
+        return self.size.height
     @height.setter
     def height(self, value: int):
-        self.size.y = value
+        self.size.height = value
     
     @property
     def name(self) -> Union[str, None]:
@@ -147,7 +156,7 @@ class BaseGraphicObject:
     def padding(self) -> Vec4[int]:
         '''
             `up`: 0 | x\n
-            `down` 1 | y\n
+            `bottom` 1 | y\n
             `left` 2 | z\n
             `right` 3 | w
         '''
@@ -161,6 +170,7 @@ class BaseGraphicContainerObject(BaseGraphicObject):
     def __init__(
         self, 
         size: Union[Vec2[int], Iterable[int]] = None,
+        padding: Union[Vec4[int], Iterable[int]] = None,
         auto_size: bool = False,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
@@ -169,7 +179,8 @@ class BaseGraphicContainerObject(BaseGraphicObject):
         *args, **kwargs
     ):
         super().__init__(
-            size=size, 
+            size=size,
+            padding=padding,
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
             name=name, 
@@ -195,8 +206,8 @@ class BaseGraphicContainerObject(BaseGraphicObject):
     def refresh(self):
         objects = [
             (
-                object.offset_x + self.padding[2],
-                object.offset_y + self.padding[0],
+                object.offset_x,
+                object.offset_y,
                 object.render()
             )
             for object in self._objects
@@ -204,8 +215,19 @@ class BaseGraphicContainerObject(BaseGraphicObject):
         
         super().refresh()
         
+        self._objects_buffer = Buffer(
+            max(self.width - sum(self.padding[2, 3]), 0),
+            max(self.height - sum(self.padding[0, 1]), 0),
+            self.clear_pixel
+        )
+        
         for object_data in objects:
-            self._buffer.paste(*object_data)
+            self._objects_buffer.paste(*object_data)
+            
+        self._buffer.paste(
+            *self.padding[2, 0],
+            self._objects_buffer
+        )
     
         
     def addObject(self, object: BaseGraphicObject):
@@ -214,7 +236,11 @@ class BaseGraphicContainerObject(BaseGraphicObject):
         )
         object.set_refresh_event.add(self.setFlagRefresh)
         self.add_object_event.invoke()
-       
+        if object._always_refresh or object._always_parent_refresh:
+            self._always_refresh = True
+    
+    def getSize(self):
+        return super().getSize()
     
     @property
     def add_object_event(self) -> Event:

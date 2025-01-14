@@ -11,6 +11,7 @@ class Frame(Container):
     def __init__(
         self, 
         size: Union[Vec2[int], Iterable[int]] = None,
+        padding: Union[Vec4[int], Iterable[int]] = None,
         auto_size: bool = False,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
@@ -20,12 +21,13 @@ class Frame(Container):
         *args, **kwargs
     ):
         super().__init__(
-            size, 
-            auto_size, 
-            offset_pos, 
-            clear_pixel, 
-            name, 
-            widgets, 
+            size=size,
+            padding=padding,
+            auto_size=auto_size, 
+            offset_pos=offset_pos, 
+            clear_pixel=clear_pixel, 
+            name=name, 
+            widgets=widgets, 
             *args, **kwargs
         )
         
@@ -46,7 +48,7 @@ class Frame(Container):
         self._buffer.paste(
             0, 0,
             Drawer.frame(
-                *self._size + Vec2(2, 2), 
+                *self.size, 
                 frame_pixel.front_color,
                 frame_pixel.back_color
             ),

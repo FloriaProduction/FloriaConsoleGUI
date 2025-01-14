@@ -1,6 +1,6 @@
-from ..Classes.Event import Event
+from ..Classes import Event, Counter
 from ..Log import Log
-from ..GVars import GVars
+from ..Config import Config
 import asyncio
 
 
@@ -8,6 +8,7 @@ class BaseThread:
     _threads: dict[str, 'BaseThread'] = {}
     init_all_event: Event = Event()
     _init_all_event_called: bool = False
+    _amt_sim = Counter()
     
     @classmethod
     def stopAll(cls):
@@ -17,7 +18,7 @@ class BaseThread:
     
     def __init__(self, delay: float = 0.5):
         self._init_event = Event()
-        self._sim_event = Event(self.simulation)
+        self._sim_event = Event(self.simulation, error_ignored=True)
         self._term_event = Event(self.termination)
         self._inited = False
         self._termed = False
@@ -36,10 +37,11 @@ class BaseThread:
                         
             while self._enabled:
                 await self._sim_event.invokeAsync()
+                self.__class__._amt_sim.add(self.name)
                 await asyncio.sleep(self._delay)
 
         except asyncio.CancelledError:
-            if GVars.DEBUG_SHOW_CANCELLED_THREAD_MESSAGE:
+            if Config.DEBUG_SHOW_CANCELLED_THREAD_MESSAGE:
                 Log.writeNotice('cancelled', self)
             
         except:

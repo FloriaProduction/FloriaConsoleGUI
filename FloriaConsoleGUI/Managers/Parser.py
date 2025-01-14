@@ -8,39 +8,28 @@ from .WindowManager import WindowManager
 from ..Graphic.Widgets import Widget
 from ..Graphic.Windows import Window
 from ..Classes import Event
-from ..GVars import GVars
+from ..Config import Config
 
 from ..Graphic.Windows import *
 from ..Graphic.Widgets import *
 
 class Parser:
     _file_path: Union[str, None] = None
-    _file_update_time = None
+    _file_update_time: Union[float, None] = None
     _builded_event: Event = Event()
     
     @classmethod
     def setFile(cls, path: str):
         if not os.path.exists(path):
             Log.writeWarning(f'File "{path}" not found', cls)
+            return
         
         cls._file_path = path
-        cls._file_update_time = os.path.getmtime(path)
         
-        WindowManager.closeAll()
-        Widget.removeAll()
+        Log.writeOk(f'File setted', cls)
         
-        try:
-            for window_data in Func.readJson(path):
-                WindowManager.openNewWindow(
-                    cls.buildWindow(window_data)
-                )
-                
-            cls._builded_event.invoke()
-            Log.writeOk('windows builded!', cls)
-        except:
-            WindowManager.closeAll()
-            Widget.removeAll()
-            Log.writeError()
+        cls.checkUpdate()
+        
     
     @classmethod
     def checkUpdate(cls):
@@ -51,7 +40,22 @@ class Parser:
         
         if now_file_update_time != cls._file_update_time:
             cls._file_update_time = now_file_update_time
-            cls.setFile(cls._file_path)
+            
+            WindowManager.closeAll()
+            Widget.removeAll()
+            
+            try:
+                for window_data in Func.readJson(cls._file_path):
+                    WindowManager.openNewWindow(
+                        cls.buildWindow(window_data)
+                    )
+                    
+                cls._builded_event.invoke()
+                Log.writeOk('windows builded!', cls)
+            except:
+                WindowManager.closeAll()
+                Widget.removeAll()
+                Log.writeError()
     
     @classmethod
     def buildWindow(cls, window_data: dict[str, any]) -> Window:
@@ -60,8 +64,9 @@ class Parser:
             for widget_data in data:
                 widget: type[Widget] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Widgets'], widget_data['class'])
                 widget_data.pop('class')
+                
                 for attr in widget_data:
-                    if GVars.PARSER_SKIP_UNKNOWED_ANNOTATIONS and attr not in widget.__init__.__annotations__:
+                    if Config.PARSER_SKIP_UNKNOWED_ANNOTATIONS and attr not in widget.__init__.__annotations__:
                         Log.writeNotice(f'widget "{widget.__name__}" attribute "{attr}" skipped', cls)
                         continue
                     

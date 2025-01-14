@@ -1,7 +1,9 @@
 from typing import Union, Iterable
 import numpy as np 
 
-from ..__init__ import BaseGraphicObject, BaseGraphicContainerObject, Pixel, Pixels, Drawer
+from ..BaseGraphicObject import BaseGraphicObject, BaseGraphicContainerObject
+from ..Pixel import Pixel, Pixels
+from ..Drawer import Drawer
 from ..Widgets import Widget
 from ...Classes import Buffer, Event, Vec2, Vec3, Vec4
 
@@ -45,14 +47,17 @@ class Window(BaseGraphicContainerObject):
         super().refresh()
         
         if self.frame:
-            frame_color: Pixel = Func.choisePixel(self.frame_pixel, self.clear_pixel)
+            frame_pixel: Pixel = Func.choisePixel(
+                self.frame_pixel, 
+                self.clear_pixel
+            )
             
             self._buffer.paste(
                 0, 0,
                 Drawer.frame(
                     *self.size,
-                    frame_color.front_color, 
-                    frame_color.back_color
+                    frame_pixel.front_color, 
+                    frame_pixel.back_color
                 )
             )
         

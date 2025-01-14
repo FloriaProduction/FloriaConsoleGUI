@@ -2,6 +2,7 @@ from typing import Union, Iterable, TypeVar
 
 from .Classes import Vec2, Vec3, Vec4, Anchor, Orientation
 from .Graphic.Pixel import Pixel, Pixels
+from .Graphic.Animation import Animation
 
 TOVECX_T = TypeVar('TOVECX_T')
 def _toVecX(vec_type: type[TOVECX_T], data: Union[TOVECX_T, Iterable], default: TOVECX_T, allow_none: bool = False) -> TOVECX_T:
@@ -35,7 +36,7 @@ TOLISTOBJECTS_T1 = TypeVar('TOLISTOBJECTS_T1')
 def toListObjects(data: Union[Iterable[TOLISTOBJECTS_T1], TOLISTOBJECTS_T1, None]) -> list[TOLISTOBJECTS_T1]:
     if data is None:
         return []
-    if isinstance(data, Iterable):
+    elif isinstance(data, Iterable):
         return [*data]
     return [data]
 

@@ -1,13 +1,13 @@
 import asyncio
-from typing import Callable, Iterable
+from typing import Callable, Iterable, overload
 
 from ..Log import Log
 
 class Event:
+    @overload
+    def __init__(self, *args, error_ignored: bool = False): ...
+    
     def __init__(self, *args: Callable[[any], None], **kwargs):
-        '''
-            error_ignored: bool = False
-        '''
         self._funcs: dict[str, Callable[[any], None]] = {}
         for func in args:
             self.add(func)

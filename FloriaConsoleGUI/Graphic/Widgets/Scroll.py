@@ -1,6 +1,6 @@
 from typing import Union, Iterable
 
-from ...Classes import Vec2, Vec3, Buffer
+from ...Classes import Vec2, Vec3, Vec4, Buffer
 from .Container import Container
 from .Widget import Widget
 from ..Pixel import Pixel, Pixels
@@ -10,6 +10,7 @@ class Scroll(Widget):
     def __init__(
         self, 
         size: Union[Vec2[int], Iterable[int]] = None, 
+        padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str, None] = None,
         name: Union[str, None] = None,
@@ -17,7 +18,14 @@ class Scroll(Widget):
         scroll_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str, None] = None,
         *args, **kwargs
     ):
-        super().__init__(size, offset_pos, clear_pixel, name, *args, **kwargs)
+        super().__init__(
+            size=size, 
+            padding=padding,
+            offset_pos=offset_pos, 
+            clear_pixel=clear_pixel, 
+            name=name, 
+            *args, **kwargs
+        )
 
         self._widgets: list[Widget] = Converter.toListObjects(widgets)
 

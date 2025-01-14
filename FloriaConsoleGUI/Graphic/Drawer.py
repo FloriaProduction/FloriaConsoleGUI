@@ -2,7 +2,7 @@ from typing import Union
 
 from ..Classes import Buffer, Vec3
 from .Pixel import Pixel
-from ..GVars import GVars
+from ..Config import Config
 
 # ┘ └ │ ├ ┬
 # ┐ ┌ ─ ┴ ┤ ┼
@@ -16,7 +16,7 @@ class Drawer:
     @classmethod
     def _putToCache(cls, key: str, value: Buffer[Pixel]):
         cls._cache[key] = value
-        if len(cls._cache) > GVars.DRAWER_MAX_SIZE_CACHE:
+        if len(cls._cache) > Config.DRAWER_MAX_SIZE_CACHE:
             cls._cache.pop(tuple(cls._cache.keys())[0])
     
     @classmethod

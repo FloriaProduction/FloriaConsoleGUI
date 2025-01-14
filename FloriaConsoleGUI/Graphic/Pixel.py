@@ -2,7 +2,7 @@ from typing import Union, Iterable
 import copy
 
 from ..Classes import Vec3
-from ..GVars import GVars
+from ..Config import Config
 
 class Pixel:
     empty = None
@@ -27,10 +27,13 @@ class Pixel:
         return Pixel(back_color=Vec3(br, bg, bb), symbol=symbol)
     
     @staticmethod
-    def changePixel(pixel: 'Pixel', symbol: chr = None, front_color: Vec3 = None, back_color: Vec3 = None) -> 'Pixel':
+    def changePixel(pixel: Union['Pixel', None], symbol: chr = None, front_color: Vec3 = None, back_color: Vec3 = None) -> Union['Pixel', None]:
         '''
             create a copy of the pixel and change it
         '''
+        if pixel is None:
+            return None
+        
         new_pixel = pixel.copy()
         
         if symbol is not None:
@@ -70,7 +73,7 @@ class Pixel:
     
     @property
     def ANSII(self) -> str:
-        return f'{'⌂' if GVars.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{self.ANSIICol}{self.symbol}'
+        return f'{'⌂' if Config.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{self.ANSIICol}{self.symbol}'
     
     @property
     def ANSIICol(self) -> str:

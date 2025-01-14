@@ -21,13 +21,25 @@ class Vec2(Generic[_T2]):
     @x.setter
     def x(self, value: _T2):
         self._setValue('_x', value)
-    
+    @property
+    def width(self) -> _T2:
+        return self.x
+    @width.setter
+    def width(self, value: _T2):
+        self.x = value
+        
     @property
     def y(self) -> _T2:
         return self._y
     @y.setter
     def y(self, value: _T2):
         self._setValue('_y', value)
+    @property
+    def height(self) -> _T2:
+        return self.y
+    @height.setter
+    def height(self, value: _T2):
+        self.y = value
     
     @property
     def change_event(self) -> Event:
@@ -142,3 +154,33 @@ class Vec4(Vec3, Generic[_T4]):
     @w.setter
     def w(self, value: _T4):
         self._setValue('_w', value)
+    
+    @property
+    def top(self) -> _T4:
+        return self.x
+    @top.setter
+    def top(self, value: _T4):
+        self.x = value
+    
+    @property
+    def bottom(self) -> _T4:
+        return self.y
+    @bottom.setter
+    def bottom(self, value: _T4):
+        self.y = value
+    
+    @property
+    def left(self) -> _T4:
+        return self.z
+    @left.setter
+    def left(self, value: _T4):
+        self.z = value
+    
+    @property
+    def right(self) -> _T4:
+        return self.w
+    @right.setter
+    def right(self, value: _T4):
+        self.w = value
+    
+    

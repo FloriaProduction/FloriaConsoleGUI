@@ -17,5 +17,8 @@ class Counter:
     def get(self, key: str) -> Union[int, None]:
         return self._data.get(key)
     
+    def getAll(self) -> dict[str, int]:
+        return self._data.copy()
+    
     def clearAll(self):
         self._data.clear()

@@ -1,4 +1,4 @@
 from .Core import Core
 from .Log import Log
-from .GVars import GVars
+from .Config import Config
 from . import Converter, Func

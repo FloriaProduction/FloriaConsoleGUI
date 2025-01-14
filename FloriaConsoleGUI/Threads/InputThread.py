@@ -2,7 +2,7 @@ import asyncio
 
 from ..Log import Log
 from ..Threads import BaseThread
-from ..GVars import *
+from ..Config import *
 from ..Managers import KeyboardManager as KeyM, posix_key
 
 
