@@ -1,8 +1,8 @@
 from typing import Union, Callable, Generic, TypeVar, Iterable
 import math
-from copy import deepcopy
 
-from .Vec import Vec2
+from .Anchor import Anchor
+from .Vec import Vec2, Vec4
 
 _T = TypeVar('_T')
 
@@ -13,8 +13,7 @@ class Buffer(Generic[_T]):
         if width < 0 or height < 0:
             raise ValueError(f'Width or height cannot be less than 0')
         
-        self._size = Vec2(width, height)
-        self._size.change_event.add(self._raise_resize)
+        self._size = Vec2(width, height, no_modify=True)
         
         self._defualt_value = defualt_value
         
@@ -25,24 +24,138 @@ class Buffer(Generic[_T]):
         else:
             self.fill()
 
-
-    def paste(self, offset_x: int, offset_y: int, buffer: Union['Buffer', None], func: Callable[[_T, _T], _T] = lambda old, new: new if new is not None else old):
-        '''
-            func: function(self_value, other_value) -> new_value
-        '''
-        if buffer is None or buffer.size.x == 0 or buffer.size.y == 0:
+    @staticmethod
+    def pasteFunction(
+        x_parent: int, 
+        y_parent: int, 
+        width_parent: int, 
+        height_parent: int, 
+        x_child: int, 
+        y_child: int, 
+        width_child: int, 
+        height_child: int, 
+        old: Union[any, None], 
+        new: Union[any, None]
+    ) -> Union[any, None]:
+        return new if new is not None else old
+    
+    def pasteArray(
+        self, 
+        offset_x: int, 
+        offset_y: int, 
+        array_width: int, 
+        array_height: int, 
+        array: Iterable, 
+        padding: Vec4 = Vec4(0, 0, 0, 0), 
+        func: Callable[[int, int, _T, _T], _T]=None
+    ):
+        if array is None or array_width == 0 or array_height == 0:
             return
         
-        for y in range(buffer.height):
-            for x in range(buffer.width):
-                pos = Vec2(
-                    offset_x + x, 
-                    offset_y + y
+        for y in range(
+            max(
+                -offset_y, 
+                0
+            ), 
+            min(
+                array_height - (padding.vertical + array_height + offset_y - self.height),
+                array_height
+            )):
+            for x in range(
+                max(
+                    -offset_x, 
+                    0
+                ), 
+                min(
+                    array_width - (padding.horizontal + array_width + offset_x - self.width),
+                    array_width
+                )):
+                xpos = x + offset_x + padding.left
+                ypos = y + offset_y + padding.top
+                
+                self._data[
+                    ypos * self._size.width + xpos
+                ] = (func if func is not None else self.pasteFunction)(
+                    xpos, ypos,
+                    self.width, self.height,
+                    x, y,
+                    array_width, array_height,
+                    self._data[
+                        ypos * self._size.width + xpos
+                    ],
+                    array[
+                        y * array_width + x
+                    ]
                 )
-                if 0 <= pos.x < self.width and 0 <= pos.y < self.height:
-                    self[*pos] = func(self.get(*pos), buffer[x, y])
         
+        # for y in range(array_height):
+        #     for x in range(array_width):
+        #         xpos, ypos = x + offset_x + padding.left, y + offset_y + padding.top
+                
+        #         if xpos >= self.width - padding.right or xpos < 0 + padding.left or\
+        #             ypos >= self.height - padding.bottom or ypos < 0 + padding.top:
+        #             continue
+                
+        #         self._data[
+        #             ypos * self._size.width + xpos
+        #         ] = func(
+        #             self._data[
+        #                 ypos * self._size.width + xpos
+        #             ],
+        #             array[
+        #                 y * array_width + x
+        #             ]
+        #         )
+    
+    def paste(
+        self, 
+        offset_x: int, 
+        offset_y: int, 
+        buffer: Union['Buffer', None], 
+        padding: Vec4 = Vec4(0, 0, 0, 0), 
+        func: Callable[[int, int, _T, _T], _T]=None
+    ):
+        if buffer is None:
+            return
+        
+        self.pasteArray(
+            offset_x, offset_y,
+            buffer.width, buffer.height, buffer.data,
+            padding,
+            func
+        )
 
+    def pasteByAnchor(
+        self, 
+        offset_x: int, 
+        offset_y: int, 
+        buffer: Union['Buffer', None], 
+        anchor: Anchor = Anchor.left_top, 
+        padding: Vec4 = Vec4(0, 0, 0, 0), 
+        func: Callable[[int, int, _T, _T], _T]=None
+    ):
+        offset_x_calc = math.floor((self.width - padding.left - padding.right) / 2 - buffer.width/2)
+        match anchor:
+            case Anchor.left | Anchor.left_top | Anchor.left_bottom:
+                offset_x_calc = 0
+            case Anchor.right | Anchor.right_top | Anchor.right_bottom:
+                offset_x_calc = self.width - buffer.width - padding.left - padding.right
+                
+        offset_y_calc = math.floor((self.height - padding.top - padding.bottom) / 2 - buffer.height/2)
+        match anchor:
+            case Anchor.top | Anchor.left_top | Anchor.right_top:
+                offset_y_calc = 0
+            case Anchor.bottom | Anchor.left_bottom | Anchor.right_bottom:
+                offset_y_calc = self.height - buffer.height - padding.top - padding.bottom
+        
+        self.paste(
+            offset_x_calc + offset_x, 
+            offset_y_calc + offset_y, 
+            buffer,
+            padding,
+            func
+        )
+    
     def fill(self, value: _T = None):
         '''
             Fill default_value if value is None
@@ -109,6 +222,8 @@ class Buffer(Generic[_T]):
         raise RuntimeError('Size cannot be changed')
     
     def copy(self) -> 'Buffer':
-        return deepcopy(self)
+        return Buffer(
+            *self.size, self._defualt_value, self._data
+        )
     
 Buffer.empty = Buffer(0, 0, None)

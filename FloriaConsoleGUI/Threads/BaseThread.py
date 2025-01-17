@@ -1,7 +1,10 @@
+import asyncio
+import time
+
 from ..Classes import Event, Counter
 from ..Log import Log
 from ..Config import Config
-import asyncio
+from .. import Func
 
 
 class BaseThread:
@@ -12,13 +15,13 @@ class BaseThread:
     
     @classmethod
     def stopAll(cls):
-        for thread in cls._threads.values():
+        for thread in tuple(cls._threads.values()):
             if thread.is_enable:
                 thread.stop()
     
     def __init__(self, delay: float = 0.5):
         self._init_event = Event()
-        self._sim_event = Event(self.simulation, error_ignored=True)
+        self._sim_event = Event(self.simulation, error_ignored=False)
         self._term_event = Event(self.termination)
         self._inited = False
         self._termed = False
@@ -36,9 +39,21 @@ class BaseThread:
             self._checkAllInitialized()
                         
             while self._enabled:
-                await self._sim_event.invokeAsync()
-                self.__class__._amt_sim.add(self.name)
-                await asyncio.sleep(self._delay)
+                # t1 = time.perf_counter()
+                
+                if Func.every(f'_sps_{self.name}', self.delay, True):
+                    await self._sim_event.invokeAsync()
+                    self.__class__._amt_sim.add(self.name)
+                
+                # sleep_time = self.delay - (time.perf_counter()-t1)
+                
+                await asyncio.sleep(
+                    0
+                    # max(
+                    #     sleep_time, 
+                    #     0
+                    # )
+                )
 
         except asyncio.CancelledError:
             if Config.DEBUG_SHOW_CANCELLED_THREAD_MESSAGE:
@@ -56,8 +71,8 @@ class BaseThread:
             self.__class__._threads.pop(self.name)
     
     def _checkAllInitialized(self):
-        if False in (thread.is_init and thread.is_term is False for thread in self.__class__._threads.values()) or \
-            self.__class__._init_all_event_called is True:
+        if self.__class__._init_all_event_called is True or \
+            False in (thread.is_init and thread.is_term is False for thread in self.__class__._threads.values()):
             return
         
         self.__class__.init_all_event.invoke()

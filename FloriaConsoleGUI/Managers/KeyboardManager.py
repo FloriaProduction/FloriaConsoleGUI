@@ -1,8 +1,8 @@
 import readchar
-from readchar import _posix_key as posix_key
 from typing import Union, Callable
 
 from ..Config import Config
+from ..Classes import Keys
 from ..Log import Log
 
 from ..Classes.Event import Event, EventKwargs
@@ -37,13 +37,8 @@ class KeyboardManager:
     
     @classmethod
     def bindEvent(cls, event_name: str, key: str):
-        '''
-            key - gets the `first element` of the string and the char is `converted to lowercase`
-        '''
         if event_name not in cls._events:
             raise
-        
-        key = key.lower()[0]
         
         if key not in cls._event_binds:
             cls._event_binds[key] = set()
@@ -56,14 +51,15 @@ class KeyboardManager:
 
     @classmethod
     def simulation(cls):
-        char = readchar.readkey()
-        char_mod = char.lower()[0]
+        key = readchar.readkey()
         if Config.DEBUG_SHOW_INPUT_KEY:
-            Log.writeNotice(f'pressed {char.encode()}', cls)
+            Log.writeNotice(f'pressed {key}', cls)
         
         for key, event_names in cls._event_binds.items():
-            if key == char or key == char_mod:
+            if key == key:
                 for event_name in event_names:
                     cls._events[event_name].invoke()
+
+        cls._pressed_event.invoke(key=key)
         
-        cls._pressed_event.invoke(char=char)
+        Config.debug_data['last pressed key'] = key.encode()

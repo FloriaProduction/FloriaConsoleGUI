@@ -16,7 +16,7 @@ from ..Graphic.Widgets import *
 class Parser:
     _file_path: Union[str, None] = None
     _file_update_time: Union[float, None] = None
-    _builded_event: Event = Event()
+    builded_event: Event = Event()
     
     @classmethod
     def setFile(cls, path: str):
@@ -33,6 +33,29 @@ class Parser:
     
     @classmethod
     def checkUpdate(cls):
+        def parseWidgets(data: list[dict[str, any]]) -> list[Widget]:
+            widgets: list[Widget] = []
+            for widget_data in data:
+                widget: type[Widget] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Widgets'], widget_data.pop('class'))
+                
+                for attr in widget_data:
+                    if Config.PARSER_SKIP_UNKNOWED_ANNOTATIONS and attr not in widget.__init__.__annotations__:
+                        Log.writeNotice(f'widget "{widget.__name__}" attribute "{attr}" skipped', cls)
+                        continue
+                    
+                    attr_value = widget_data[attr]
+                    if isinstance(attr_value, str) and attr_value in temp:
+                        widget_data[attr] = temp[attr_value]
+                        
+                    match attr:
+                        case 'widgets':
+                            widget_data[attr] = parseWidgets(attr_value)
+                    
+                widgets.append(widget(**widget_data))
+            return widgets
+        
+        temp: dict[str, any] = {}
+        
         if cls._file_path is None:
             return
         
@@ -45,46 +68,25 @@ class Parser:
             Widget.removeAll()
             
             try:
-                for window_data in Func.readJson(cls._file_path):
-                    WindowManager.openNewWindow(
-                        cls.buildWindow(window_data)
-                    )
+                for data in Func.readJson(cls._file_path):
+                    data_class = data.pop('class')
+                    match data_class:
+                        case 'temp':
+                            temp.update(data)
+                            
+                        case _:
+                            window: type[Window] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Windows'], data_class)
+                            
+                            if 'widgets' in data:
+                                data['widgets'] = parseWidgets(data['widgets'])
+
+                            WindowManager.openNewWindow(
+                                window(**data)
+                            )
                     
-                cls._builded_event.invoke()
+                cls.builded_event.invoke()
                 Log.writeOk('windows builded!', cls)
             except:
                 WindowManager.closeAll()
                 Widget.removeAll()
                 Log.writeError()
-    
-    @classmethod
-    def buildWindow(cls, window_data: dict[str, any]) -> Window:
-        def parseWidgets(data: list[dict[str, any]]) -> list[Widget]:
-            widgets: list[Widget] = []
-            for widget_data in data:
-                widget: type[Widget] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Widgets'], widget_data['class'])
-                widget_data.pop('class')
-                
-                for attr in widget_data:
-                    if Config.PARSER_SKIP_UNKNOWED_ANNOTATIONS and attr not in widget.__init__.__annotations__:
-                        Log.writeNotice(f'widget "{widget.__name__}" attribute "{attr}" skipped', cls)
-                        continue
-                    
-                    attr_value = widget_data[attr]
-                    match attr:
-                        case 'widgets':
-                            widget_data[attr] = parseWidgets(attr_value)
-                    
-                widgets.append(widget(**widget_data))
-            return widgets
-                
-        window: type[Window] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Windows'], window_data['class'])
-        
-        if 'widgets' in window_data:
-            window_data['widgets'] = parseWidgets(window_data['widgets'])
-
-        return window(**window_data)
-    
-    @classmethod
-    def get_builded_event(cls) -> Event:
-        return cls._builded_event

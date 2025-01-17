@@ -1,86 +1,119 @@
-from typing import Union, Iterable
+from typing import Union, Iterable, Unpack
 
+from ...Classes import Vec2, Vec3, Vec4, Event, Buffer, Anchor
 from .Widget import Widget
-from ..Pixel import Pixel, Pixels
-from ...Classes import Vec2, Vec3, Vec4, Anchor
-from ... import Func
+from ..Pixel import Pixel
 from ... import Converter
+from ... import Func
+from ..Drawer import Drawer
+from ...Config import Config
 
 class Label(Widget):
     def __init__(
         self, 
-        text: str = 'label', 
+        text: str = 'Label',
         text_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str, None] = None,
+        text_anchor: Anchor = Anchor.left,
+        text_max_size: Union[Vec2[int], Iterable[int]] = None,
+        size: Union[Vec2[int], Iterable[int]] = None,
+        min_size: Union[Vec2[int], Iterable[int]] = None,
+        max_size: Union[Vec2[int], Iterable[int]] = None,
         padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
-        clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str, None] = None,
+        clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
-        min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
-        anchor: Union[Anchor, str] = Anchor.left,
-        tab_length: int = 4,
+        can_be_moved: bool = True,
         *args, **kwargs
-    ):
+        ):
         super().__init__(
-            size=(0, 0), 
-            padding=padding,
+            size=size, 
+            min_size=min_size,
+            max_size=max_size,
+            padding=padding, 
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
             name=name, 
+            can_be_moved=can_be_moved,
             *args, **kwargs
         )
+        self._change_text_event = Event()
         
-        self._text_pixel = Converter.toPixel(text_pixel)
-        self._anchor = Converter.toAnchor(anchor)
-        self._min_size = Converter.toVec2(min_size, Vec2(None, None), True)
-        self._lines: tuple[str] = ()
-        self._tab_length = tab_length
-        
-        self.text = text
+        self._text = Converter.toMultilineText(text)
+        self._text_pixel = text_pixel
+        self._text_anchor = Converter.toAnchor(text_anchor)
+        self._text_max_size = Converter.toVec2(text_max_size, Vec2(None, None), True)
     
-    def refresh(self):
-        super().refresh()
-        
-        text_pixel = Func.choisePixel(self.text_pixel, self.clear_pixel, Pixels.wt)
-        for y in range(len(self._lines)):
-            for x in range(len(self._lines[y])):
-                self._buffer[
-                    x + self.padding.left, 
-                    y + self.padding.top
-                ] = Pixel.changePixel(text_pixel, symbol=self._lines[y][x])
-    
-    def setText(self, value: str):
-        text = str(value).replace('\t', ' '*self._tab_length)
-        self._lines = tuple([
-            Func.setTextAnchor(
-                line, 
-                self._anchor, 
-                max(len(line), self._min_size.x),
-                self._clear_pixel.symbol
-            ) if self._min_size.x is not None else line for line in [
-                line.replace('\n', '') for line in text.rsplit('\n')
-            ]
-        ])
-        
-        self.size = Vec2(
-            max(map(len, self._lines)), 
-            len(self._lines)
+    async def renderTextBuffer(self, add_empty_symbol_to_end: bool = False) -> Buffer[Pixel]:
+        text_buffer = await Drawer.renderTextBuffer(
+            self.text + (' ' if add_empty_symbol_to_end else ''),
+            Func.choisePixel(self.text_pixel, self.clear_pixel)
         )
         
-        self.setFlagRefresh()
+        return text_buffer
+
+    async def refresh(self):
+        text_buffer = await self.renderTextBuffer()
         
+        self.size = text_buffer.size
+        
+        await super().refresh()
+        
+        self._buffer.pasteByAnchor(
+            0, 0,
+            text_buffer,
+            self.text_anchor,
+            self.padding
+        )
+
+    def getSize(self) -> Vec2[int]:
+        size = super().getSize()
+        return Vec2(
+            max(size.width, len(self.text)),
+            max(size.height, 1)
+        )
+    
+    def setText(self, value: str):
+        lines = [
+            line[:(len(line) if self.text_max_size.width is None else self.text_max_size.width)] 
+            for line in value.split('\n')
+        ]
+        self._text = '\n'.join(lines[:(len(lines) if self.text_max_size.height is None else self.text_max_size.height)])
+        self._change_text_event.invoke()
+        self.setFlagRefresh()
     def getText(self) -> str:
-        return '\n'.join(self._lines)
+        return self._text
     @property
     def text(self) -> str:
         return self.getText()
     @text.setter
     def text(self, value: str):
         self.setText(value)
-    
+
+    def getTextPixel(self) -> Union[Pixel, None]:
+        return self._text_pixel
+    def setTextPixel(self, value: Union[Pixel, None]):
+        self._text_pixel = value
     @property
     def text_pixel(self) -> Union[Pixel, None]:
-        return self._text_pixel
+        return self.getTextPixel()
     @text_pixel.setter
     def text_pixel(self, value: Union[Pixel, None]):
-        self._text_pixel= value
-
+        self._text_pixel = value
+    
+    @property
+    def text_anchor(self) -> Anchor:
+        return self._text_anchor
+    @text_anchor.setter
+    def text_anchor(self, value: Anchor):
+        self._text_anchor = value
+    
+    @property
+    def text_max_size(self) -> Vec2[Union[int, None]]:
+        return self._text_max_size
+    @text_max_size.setter
+    def text_max_size(self, value: Vec2[Union[int, None]]):
+        self._text_max_size = value
+        
+    @property
+    def change_text_event(self) -> Event:
+        return self._change_text_event

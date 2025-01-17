@@ -27,7 +27,8 @@ class Event:
             self._funcs[f'{func.__module__}.{func.__name__}_{tuple(func.__annotations__.keys())}'] = func
 
     def invoke(self, *args, **kwargs):
-        for func in self._funcs.values():
+        functions = tuple(self._funcs.values())
+        for func in functions:
             try:
                 res = func(*args, **kwargs)
                 if asyncio.iscoroutine(res):

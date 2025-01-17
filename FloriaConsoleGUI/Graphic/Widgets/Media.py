@@ -10,11 +10,14 @@ class Media(Widget):
     def __init__(
         self,
         size: Union[Vec2[int], Iterable[int]] = None,
+        min_size: Union[Vec2[int], Iterable[int]] = None,
+        max_size: Union[Vec2[int], Iterable[int]] = None,
         padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
         animation: Animation = None,
+        can_be_moved: bool = True,
         *args, **kwargs
         ):
         
@@ -22,19 +25,21 @@ class Media(Widget):
         
         super().__init__(
             size=size if size is not None else self._animation.size, 
+            min_size=min_size,
+            max_size=max_size,
             padding=padding, 
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
-            name=name, 
-            always_parent_refresh=True,
+            name=name,
+            can_be_moved=can_be_moved,
             *args, **kwargs
         )
         
         self._animation_change_event = Event()
         
     
-    def refresh(self):
-        super().refresh()
+    async def refresh(self):
+        await super().refresh()
         
         if self.animation is None:
             return
@@ -45,11 +50,14 @@ class Media(Widget):
             self.animation.render().resize(*self.size)
         )
     
-    def render(self):
+    async def awaitingRefresh(self):
+        return self.animation.is_next
+    
+    async def render(self):
         if self.animation.is_next:
             self.setFlagRefresh()
         
-        return super().render()
+        return await super().render()
     
     def getAnimation(self) -> Animation:
         return self._animation

@@ -1,6 +1,6 @@
 from typing import Union, Iterable
 
-from ..Classes import Vec2, Vec3, Vec4, Event, Buffer
+from ..Classes import Vec2, Vec3, Vec4, Event, Buffer, Orientation
 from .Pixel import Pixel, Pixels
 from .. import Converter
 
@@ -9,12 +9,13 @@ class BaseGraphicObject:
     def __init__(
         self,
         size: Union[Vec2[int], Iterable[int]] = None,
+        min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
+        max_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
         padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
-        always_refresh: bool = False,
-        always_parent_refresh: bool = False,
+        can_be_moved: bool = True,
         *args, **kwargs
         ):
         
@@ -31,9 +32,12 @@ class BaseGraphicObject:
         self._offset_pos = Converter.toVec3(offset_pos)
         self._size = Converter.toVec2(size)
         self._padding: Vec4[int] = Converter.toVec4(padding)
+        self._min_size = Converter.toVec2(min_size, Vec2(None, None), True)
+        self._max_size = Converter.toVec2(max_size, Vec2(None, None), True)
+        self._can_be_moved = can_be_moved
         
         ''' buffers '''
-        self._buffer: Buffer[Pixel] = Buffer.empty
+        self._buffer: Buffer[Pixel] = None
         
         ''' pixels '''
         self._clear_pixel = Converter.toPixel(clear_pixel)
@@ -43,28 +47,27 @@ class BaseGraphicObject:
         
         ''' other '''
         self._name = name
-        self._always_refresh = always_refresh
-        self._always_parent_refresh = always_parent_refresh
-
-
-    def refresh(self):
+    
+    async def refresh(self):
         self._buffer = Buffer(
-            self.width + self.padding.left + self.padding.right,
-            self.height + self.padding.top + self.padding.bottom,
+            self.width + self.padding.horizontal,
+            self.height + self.padding.vertical,
             self.clear_pixel
         )
         
         self._flag_refresh = False
     
-    def render(self) -> Buffer[Pixel]:
-        if self._flag_refresh or self._always_refresh or self._always_parent_refresh:
-            self.refresh()
+    async def awaitingRefresh(self) -> bool:
+        return False
+    
+    async def render(self) -> Buffer[Pixel]:
+        if self._flag_refresh:
+            await self.refresh()
         return self._buffer
     
     def setFlagRefresh(self):
         self._flag_refresh = True
         self.set_refresh_event.invoke()
-    
     
     def setOffsetPos(self, value: Vec3[int]):
         self._offset_pos = value
@@ -102,7 +105,28 @@ class BaseGraphicObject:
             self.resize_event.invoke
         )
     def getSize(self) -> Vec2[int]:
-        return self._size
+        return Vec2(
+            max(
+                max(
+                    self._size.width,  
+                    self._min_size.width if self._min_size.width is not None else 0
+                ), 
+                min(
+                    self._size.width,
+                    self._max_size.width if self._max_size.width is not None else self._size.width
+                )
+            ),
+            max(
+                max(
+                    self._size.height, 
+                    self._min_size.height if self._min_size.height is not None else 0
+                ), 
+                min(
+                    self._size.height,
+                    self._max_size.height if self._max_size.height is not None else self._size.height
+                )
+            )
+        )
     @property
     def size(self) -> Vec2[int]:
         return self.getSize()
@@ -114,25 +138,48 @@ class BaseGraphicObject:
         return self.size.width
     @width.setter
     def width(self, value: int):
-        self.size.width = value
+        self._size.width = value
     @property
     def height(self) -> int:
         return self.size.height
     @height.setter
     def height(self, value: int):
-        self.size.height = value
+        self._size.height = value
+        
+    @property
+    def min_size(self) -> Vec2[int]:
+        return self._min_size
+    @size.setter
+    def min_size(self, value: Vec2[int]):
+        self._min_size = value
+        self.setFlagRefresh()
+        
+    @property
+    def max_size(self) -> Vec2[int]:
+        return self._max_size
+    @size.setter
+    def max_size(self, value: Vec2[int]):
+        self._max_size = value
+        self.setFlagRefresh()
+    
     
     @property
     def name(self) -> Union[str, None]:
         return self._name
     
-    @property
-    def clear_pixel(self) -> Union[Pixel, None]:
+    def getClearPixel(self) -> Union[Pixel, None]:
         return self._clear_pixel
-    @clear_pixel.setter
-    def clear_pixel(self, value: Union[Pixel, None]):
+    
+    def setClearPixel(self, value: Union[Pixel, None]):
         self._clear_pixel = value
         self.change_clear_pixel_event.invoke()
+    
+    @property
+    def clear_pixel(self) -> Union[Pixel, None]:
+        return self.getClearPixel()
+    @clear_pixel.setter
+    def clear_pixel(self, value: Union[Pixel, None]):
+        self.setClearPixel(value)
     
     @property
     def resize_event(self) -> Event:
@@ -164,26 +211,41 @@ class BaseGraphicObject:
     @padding.setter
     def padding(self, value: Vec4[int]):
         self.setPadding(value)
+        
+    @property
+    def can_be_moved(self) -> bool:
+        return self._can_be_moved
+    @can_be_moved.setter
+    def can_be_moved(self, value: bool):
+        self._can_be_moved = value
 
 
 class BaseGraphicContainerObject(BaseGraphicObject):
     def __init__(
         self, 
         size: Union[Vec2[int], Iterable[int]] = None,
+        min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
+        max_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
         padding: Union[Vec4[int], Iterable[int]] = None,
         auto_size: bool = False,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
         objects: Union[Iterable[BaseGraphicObject], BaseGraphicObject] = [], 
+        direction: Union[Orientation, None] = Orientation.horizontal,
+        gap: int = 0,
+        can_be_moved: bool = True,
         *args, **kwargs
     ):
         super().__init__(
             size=size,
+            min_size=min_size,
+            max_size=max_size,
             padding=padding,
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
             name=name, 
+            can_be_moved=can_be_moved,
             *args, **kwargs
         )
         
@@ -199,52 +261,118 @@ class BaseGraphicContainerObject(BaseGraphicObject):
         self._objects: list['BaseGraphicObject'] = []
         for object in Converter.toListObjects(objects):
             self.addObject(object)
+        self._direction: Orientation = Converter.toOrientation(direction)
+        self._gap: int = gap
         
         ''' buffers '''
         self._objects_buffer: Buffer[Pixel] = Buffer.empty
     
-    def refresh(self):
+    async def refresh(self):
         objects = [
             (
                 object.offset_x,
                 object.offset_y,
-                object.render()
+                await object.render(),
+                object.can_be_moved
             )
             for object in self._objects
         ]
         
-        super().refresh()
-        
-        self._objects_buffer = Buffer(
-            max(self.width - sum(self.padding[2, 3]), 0),
-            max(self.height - sum(self.padding[0, 1]), 0),
-            self.clear_pixel
-        )
-        
-        for object_data in objects:
-            self._objects_buffer.paste(*object_data)
+        if self._direction is None:
+            await super().refresh()
             
+            self._objects_buffer = Buffer(
+                max(self.width - self.padding.horizontal, 0),
+                max(self.height - self.padding.vertical, 0),
+                self.clear_pixel
+            )
+            
+            for object_data in objects:
+                self._objects_buffer.paste(*object_data[:3])
+                
+            
+        else:
+            object_buffer_width = object_buffer_height = 0
+            
+            for object in self._objects:
+                if object.can_be_moved is False:
+                    continue
+                
+                match self._direction:
+                    case Orientation.vertical:
+                        object_buffer_width = max(object.width + object.padding.horizontal, object_buffer_width)
+                    case _:
+                        object_buffer_width += object.width + object.padding.horizontal + self.gap
+                
+                match self._direction:
+                    case Orientation.horizontal:
+                        object_buffer_height = max(object.height + object.padding.vertical, object_buffer_height)
+                    case _:
+                        object_buffer_height += object.height + object.padding.vertical + self.gap
+            
+            if self._direction is Orientation.horizontal:
+                object_buffer_width -= 1
+            else:
+                object_buffer_height -= 1
+            
+            self._objects_buffer = Buffer(
+                object_buffer_width,
+                object_buffer_height,
+                self.clear_pixel
+            )
+            
+            self.size = Vec2(
+                self._objects_buffer.width,
+                self._objects_buffer.height
+            )
+            
+            await super().refresh()
+            
+            x_indent = y_indent = 0
+            for object in objects:
+                if object[3] is True: # object can be moved
+                    self._objects_buffer.paste(
+                        x_indent, y_indent,
+                        object[2]
+                    )
+                    
+                    if self._direction is Orientation.horizontal:
+                        x_indent+=object[2].width + self.gap
+                    else:
+                        y_indent+=object[2].height + self.gap
+                else:
+                    self._objects_buffer.paste(*object[:3])
+                
         self._buffer.paste(
-            *self.padding[2, 0],
+            self.padding.left, self.padding.top,
             self._objects_buffer
         )
     
+    async def render(self):
+        for object in self._objects:
+            if await object.awaitingRefresh():
+                self.setFlagRefresh()
+                break
         
+        return await super().render()
+    
     def addObject(self, object: BaseGraphicObject):
         self._objects.append(
             object
         )
         object.set_refresh_event.add(self.setFlagRefresh)
         self.add_object_event.invoke()
-        if object._always_refresh or object._always_parent_refresh:
-            self._always_refresh = True
-    
-    def getSize(self):
-        return super().getSize()
     
     @property
     def add_object_event(self) -> Event:
         return self.__add_object_event
+    
+    @property
+    def gap(self) -> int:
+        return self._gap
+    @gap.setter
+    def gap(self, value: int):
+        self._gap = value
     
     def __iter__(self):
         yield from self._objects

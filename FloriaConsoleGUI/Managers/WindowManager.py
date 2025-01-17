@@ -7,7 +7,7 @@ from ..Graphic.Windows import Window
 from ..Classes import Buffer, Vec2, Anchor, Orientation
 from ..Log import Log
 from ..Config import Config
-from .KeyboardManager import KeyboardManager, posix_key
+from .KeyboardManager import KeyboardManager
 from .. import Func
 
 class WindowManager:
@@ -28,7 +28,8 @@ class WindowManager:
     @classmethod
     def closeCurrentWindow(cls):
         cls._window_queue.pop(cls._index_current_window).close_event.invoke()
-        cls._normalizeIndexCurrentWindow()
+        if len(cls._window_queue) > 0:
+            cls._normalizeIndexCurrentWindow()
     
     @classmethod
     def closeAll(cls, except_names: Iterable[str] = []):
@@ -62,7 +63,7 @@ class WindowManager:
         return cls._window_queue[cls._index_current_window]
     
     @classmethod
-    def render(cls) -> Union[Buffer[Pixel], None]:
+    async def render(cls) -> Union[Buffer[Pixel], None]:
         '''
             if count(windows) == 0
                 return `None`
@@ -74,7 +75,7 @@ class WindowManager:
             return None
 
         windows: list[tuple[any]] = [
-            ((window.offset_pos.x, window.offset_pos.y), window.render()) for window in sorted(cls._window_queue, key=lambda window: window.offset_z)
+            ((window.offset_pos.x, window.offset_pos.y), await window.render()) for window in sorted(cls._window_queue, key=lambda window: window.offset_z)
         ]
         
         buffer = Buffer(*Func.calculateSizeByItems(cls._window_queue), Pixel.empty)
@@ -85,25 +86,21 @@ class WindowManager:
         return buffer
 
     @classmethod
-    def pressed(cls, char: str, **kwargs):       
+    def pressed(cls, key: str, **kwargs):       
         window_current = cls.getCurrent()
         if window_current is None:
             return
         
-        match char:
-            case '\x00H':
-                window_current.selectBackWidget()
-            case '\x00P':
-                window_current.selectNextWidget()
+        # match char:
+        #     case '\x00H':
+        #         window_current.selectPrevious()
+        #     case '\x00P':
+        #         window_current.selectNext()
+        #     case _:
+        window_current.inputKey(key)
         
     @classmethod
     def _normalizeIndexCurrentWindow(cls):
-        if len(cls._window_queue) == 0:
-            return
-
-        if cls._index_current_window < 0:
-            cls._index_current_window = 0
-        elif cls._index_current_window >= len(cls._window_queue):
-            cls._index_current_window = len(cls._window_queue) - 1
+        cls._index_current_window = Func.normalizeIndex(cls._index_current_window, len(cls._window_queue))
     
 KeyboardManager.addHandlerToPressedEvent(WindowManager.pressed)

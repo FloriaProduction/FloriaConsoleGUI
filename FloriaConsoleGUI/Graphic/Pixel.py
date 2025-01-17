@@ -1,11 +1,10 @@
 from typing import Union, Iterable
-import copy
 
 from ..Classes import Vec3
 from ..Config import Config
 
 class Pixel:
-    empty = None
+    empty: 'Pixel' = None
     clearANSII = f'\033[0m'
     
     def __init__(
@@ -31,10 +30,8 @@ class Pixel:
         '''
             create a copy of the pixel and change it
         '''
-        if pixel is None:
-            return None
         
-        new_pixel = pixel.copy()
+        new_pixel = pixel.copy() if pixel is not None else Pixel.empty.copy()
         
         if symbol is not None:
             new_pixel.symbol = symbol
@@ -73,7 +70,7 @@ class Pixel:
     
     @property
     def ANSII(self) -> str:
-        return f'{'⌂' if Config.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{self.ANSIICol}{self.symbol}'
+        return f'{self.ANSIICol}{'⌂' if Config.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{self.symbol}'
     
     @property
     def ANSIICol(self) -> str:
@@ -97,12 +94,22 @@ class Pixel:
     @staticmethod
     def compareColors(pixel1: 'Pixel', pixel2: 'Pixel') -> bool:
         return pixel1.front_color == pixel2.front_color and pixel1.back_color == pixel2.back_color
-        
+    
+    def getColors(self) -> tuple[Vec3, Vec3]:
+        return (
+            self.front_color,
+            self.back_color
+        )
+    
     def __str__(self):
         return f'Pixel(f:{self.front_color};b:{self.back_color})'
 
     def copy(self) -> 'Pixel':
-        return copy.deepcopy(self)
+        return self.__class__(
+            self.front_color,
+            self.back_color,
+            self.symbol
+        )
 
 Pixel.empty = Pixel()
 
@@ -118,5 +125,8 @@ class Pixels:
     f_red = Pixel((255, 0, 0))
     b_red = Pixel(None, (255, 0, 0))
     f_blue = Pixel((0, 0, 255))
+    b_blue = Pixel(None, (0, 0, 255))
     f_yellow = Pixel((255, 255, 0))
-    wt = Pixel((255, 255, 255))
+    b_yellow = Pixel(None, (255, 255, 0))
+    white_black = Pixel((255, 255, 255))
+    black_white = Pixel((0, 0, 0), (255, 255, 255))

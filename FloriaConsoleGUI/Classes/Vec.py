@@ -1,15 +1,30 @@
-from typing import Union, Callable, Generic, TypeVar, Iterable
+from typing import Union, Callable, Generic, TypeVar, Iterable, overload
 from .Event import Event
 
 _T2 = TypeVar('_T2')
 class Vec2(Generic[_T2]):
-    def __init__(self, x: _T2, y: _T2):
+    @overload
+    def __init__(self, width: _T2, height: _T2, no_modify=False): ...
+    
+    @overload
+    def __init__(self, x: _T2, y: _T2, no_modify=False): ...
+    
+    def __init__(self, x: _T2, y: _T2, **kwargs):
         self._x = x
         self._y = y
         
         self._prop_for_iter: tuple[str] = ['_x', '_y']
     
+        self._no_modify: bool = kwargs.get('no_modify', False)
+    
         self._update_event: Event = Event()
+        
+        if self._no_modify:
+            self._update_event.add(lambda: self.raise_exc(f'{self} cannot be modify'))
+        
+    @staticmethod
+    def raise_exc(message: str):
+        raise RuntimeError(message)
     
     def _setValue(self, attrib_name: str, value: _T2):
         self.__setattr__(attrib_name, value)
@@ -121,8 +136,11 @@ class Vec2(Generic[_T2]):
 
 _T3 = TypeVar('_T3')
 class Vec3(Vec2, Generic[_T3]):
-    def __init__(self, x: _T3, y: _T3, z: _T3):
-        super().__init__(x, y)
+    @overload
+    def __init__(self, x: _T2, y: _T2, z: _T3, no_modify=False): ...
+    
+    def __init__(self, x: _T3, y: _T3, z: _T3, **kwargs):
+        super().__init__(x, y, **kwargs)
         self._z = z
         
         self._prop_for_iter = (*self._prop_for_iter, '_z')
@@ -139,8 +157,13 @@ class Vec3(Vec2, Generic[_T3]):
 
 _T4 = TypeVar('_T4')
 class Vec4(Vec3, Generic[_T4]):
-    def __init__(self, x: _T4, y: _T4, z: _T4, w: _T4):
-        super().__init__(x, y, z)
+    @overload
+    def __init__(self, top: _T4, bottom: _T4, left: _T2, right: _T2, no_modify=False): ...
+    @overload
+    def __init__(self, x: _T2, y: _T2, z: _T4, w: _T4, no_modify=False): ...
+    
+    def __init__(self, x: _T4, y: _T4, z: _T4, w: _T4, **kwargs):
+        super().__init__(x, y, z, **kwargs)
         self._w = w
         
         self._prop_for_iter = (*self._prop_for_iter, '_w')
@@ -182,5 +205,13 @@ class Vec4(Vec3, Generic[_T4]):
     @right.setter
     def right(self, value: _T4):
         self.w = value
+        
+    @property
+    def horizontal(self) -> _T4:
+        return self.left + self.right
+    
+    @property
+    def vertical(self) -> _T4:
+        return self.top + self.bottom
     
     

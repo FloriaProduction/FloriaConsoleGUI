@@ -49,35 +49,79 @@ class TitledWindow(Window):
         
         self._flag_renderTitle = True
         
-
-    def setRenderTitle(self):
-        self._flag_renderTitle = True
-    
-    def renderTitle(self):
-        title_tex_length = max(self.width, 0)
+        self.resize_event.add(self.setFlagRenderTitle)
         
-        self._title_buffer = Buffer(
-            self.width,
-            1,
-            self.clear_pixel,
-            [
-                Pixel.changePixel(self._title_pixel, part) for part in Func.setTextAnchor(self._title, self._title_anchor, title_tex_length, crop=True)
-            ]
-        )
+
+    def setFlagRenderTitle(self):
+        self._flag_renderTitle = True
+        self.setFlagRefresh()
+    
+    async def renderTitle(self) -> Buffer[Pixel]:        
+        match self._title_style:
+            case 1:
+                buffer = Buffer(
+                    self.width + self.padding.horizontal,
+                    3,
+                    self.clear_pixel
+                )
+                buffer.paste(
+                    0, 0,
+                    Drawer.frame(
+                        *buffer.size,
+                        *self.clear_pixel.getColors()
+                    )
+                )
+                buffer.paste(
+                    0, 0,
+                    await Drawer.renderTextBuffer(
+                        Func.setTextAnchor(
+                            self._title,
+                            self._title_anchor,
+                            max(self.width + self.padding.horizontal - 2, 0),
+                            crop=True
+                        ),
+                        self._title_pixel
+                    ),
+                    Vec4(1, 1, 1, 1),
+                )
+            
+            case _:
+                buffer = Buffer(
+                    self.width,
+                    1,
+                    self.clear_pixel,
+                    [
+                        Pixel.changePixel(self._title_pixel, part) for part in Func.setTextAnchor(
+                            self._title, 
+                            self._title_anchor, 
+                            self.width + self.padding.horizontal, 
+                            crop=True
+                        )
+                    ]
+                )
         
         self._flag_renderTitle = False
+        return buffer
     
-    def refresh(self):
+    async def refresh(self):
+        await super().refresh()
+        
         if self._flag_renderTitle:
-            self.renderTitle()
-        super().refresh()
+            self._title_buffer = await self.renderTitle()
+        
         self._buffer.paste(
             0, 0,
-            self._title_buffer
+            self._title_buffer,
+            func=Drawer.mergeFramePixels
         )
     
     def getPadding(self):
-        return super().getPadding() + Vec4(self._title_buffer.height - 1, 0, 0, 0)
+        return super().getPadding() + Vec4(
+            2 if self._title_style == 1 else 0, 
+            0, 
+            0, 
+            0
+        )
     
     # def renderTitle(self):
     #     match self._title_style:
@@ -139,4 +183,4 @@ class TitledWindow(Window):
     @title.setter
     def title(self, value: str):
         self._title = value
-        self.setRenderTitle()
+        self.setFlagRenderTitle()

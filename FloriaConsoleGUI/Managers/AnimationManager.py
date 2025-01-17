@@ -4,6 +4,7 @@ import PIL
 import PIL.GifImagePlugin
 import PIL.Image
 
+from ..Log import Log
 from .. import Func
 from ..Graphic import Animation, Pixel
 from ..Classes import Buffer
@@ -15,14 +16,19 @@ class AnimationManager:
     @classmethod
     def get(cls, name: str) -> Animation:
         if name not in cls._animations:
-            raise ValueError(f'Animation "{name}" not found')
+            raise ValueError(
+                f'Animation "{name}" not found'
+            )
         return cls._animations[name].copy()
     
     @classmethod
     def register(cls, name: str, animation: Animation):
         if name in cls._animations:
-            raise ValueError('//')
+            raise ValueError(
+                f'Animation with name "{name}" already exists'
+            )
         cls._animations[name] = animation
+        Log.writeOk(f'Animation "{name}" loaded', cls)
     
     @classmethod
     def load(cls, path: str):
@@ -47,6 +53,7 @@ class AnimationManager:
             cls.register(
                 data['name'],
                 Animation(
+                    data['name'],
                     delay=data.get('delay', cls.getDelay(image)),
                     loop=data.get('loop', True),
                     frames=cls.getFrames(image)

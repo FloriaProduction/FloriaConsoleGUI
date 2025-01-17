@@ -49,11 +49,11 @@ class Scroll(Widget):
                 widget.render()
             )
     
-    def refresh(self):
+    async def refresh(self):
         if self._full_buffer is None:
             self._updateFullBuffer()
         
-        super().refresh()
+        await super().refresh()
         
         self._buffer.paste(
             -self._scroll.x, 

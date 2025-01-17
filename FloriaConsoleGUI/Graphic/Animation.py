@@ -1,5 +1,4 @@
 from typing import Union, Iterable
-from copy import deepcopy
 import time
 import math
 
@@ -9,11 +8,14 @@ from ..Graphic.Pixel import Pixel
 class Animation:
     def __init__(
         self, 
+        name: str,
         loop: bool = True,
         frames: Union[Iterable[Buffer[Pixel]], Buffer[Pixel]] = (),
         delay: float = 1,
         *args, **kwargs
     ):
+        self._name = name
+        
         if isinstance(frames, Iterable):
             if len(frames) == 0:
                 raise ValueError()
@@ -80,9 +82,18 @@ class Animation:
     @delay.setter
     def delay(self, value: float):
         self._delay = value
+        
+    @property
+    def name(self) -> str:
+        return self._name
     
     def __len__(self) -> int:
         return len(self._frames)
 
     def copy(self) -> 'Animation':
-        return deepcopy(self)
+        return Animation(
+            self.name,
+            self.loop,
+            self._frames,
+            self.delay
+        )

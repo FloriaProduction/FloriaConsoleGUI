@@ -1,5 +1,7 @@
 from typing import Union
 from traceback import format_exc
+from time import sleep
+from .Config import Config
 
 class Log:
     _min_state = _min_name = 0
@@ -63,6 +65,7 @@ class Log:
             message_color='\033[37;49m', 
             capitalize_message=False
         )
+        sleep(Config.LOG_ERROR_DELAY)
 
     @classmethod
     def writeWarning(cls, message: Union[str, None] = None, name: Union[str, None] = None):

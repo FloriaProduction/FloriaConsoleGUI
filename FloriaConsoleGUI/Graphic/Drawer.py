@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Iterable
 
 from ..Classes import Buffer, Vec3
 from .Pixel import Pixel
@@ -51,7 +51,19 @@ class Drawer:
         return cls._cache[key]
     
     @classmethod
-    def mergeFramePixels(cls, pixel1: Union[FramePixel, None], pixel2: Union[FramePixel, None]) -> FramePixel:       
+    def mergeFramePixels(
+        cls, 
+        x_parent: int, 
+        y_parent: int, 
+        width_parent: int, 
+        height_parent: int, 
+        x_child: int, 
+        y_child: int, 
+        width_child: int, 
+        height_child: int, 
+        pixel1: Union[FramePixel, None], 
+        pixel2: Union[FramePixel, None]
+    ) -> FramePixel:       
         def inArr(*args) -> bool:
             for symbol in args:
                 if symbol not in arr:
@@ -94,4 +106,29 @@ class Drawer:
             new_symbol = '┬'
         
         return Pixel.changePixel(pixel2, symbol=new_symbol)
+    
+    
+    _text_buffers_cache: dict[str, Buffer[Pixel]] = {}
+    @classmethod
+    async def renderTextBuffer(cls, text: Union[str, Iterable[str]], text_pixel: Pixel = None) -> Buffer[Pixel]:
+        name = f'{text}_{text_pixel}'
         
+        if name not in cls._text_buffers_cache:
+            lines = text.split('\n') if isinstance(text, str) else text
+            lines_mod = [
+                *[line + Config.NEW_LINE_SYMBOL for line in lines[:-1]], 
+                lines[-1]
+            ]
+            buffer = Buffer(
+                max(map(len, lines_mod)),
+                len(lines_mod),
+                text_pixel
+            )
+            for y in range(buffer.height):
+                for x in range(min(len(lines_mod[y]), buffer.width)):
+                    buffer.set(
+                        x, y, 
+                        Pixel.changePixel(buffer[x, y], symbol=lines_mod[y][x])
+                    )
+            cls._text_buffers_cache[name] = buffer
+        return cls._text_buffers_cache[name].copy()

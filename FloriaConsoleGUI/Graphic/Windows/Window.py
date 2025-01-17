@@ -4,8 +4,10 @@ import numpy as np
 from ..BaseGraphicObject import BaseGraphicObject, BaseGraphicContainerObject
 from ..Pixel import Pixel, Pixels
 from ..Drawer import Drawer
-from ..Widgets import Widget
-from ...Classes import Buffer, Event, Vec2, Vec3, Vec4
+from ..Widgets.Widget import Widget
+from ..Widgets.InteractiveWidget import InteractiveWidget
+from ...Classes import Buffer, Event, Vec2, Vec3, Vec4, Keys
+from ...Log import Log
 
 from ... import Converter
 from ... import Func
@@ -23,6 +25,8 @@ class Window(BaseGraphicContainerObject):
         frame_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         *args, **kwargs
     ):
+
+        
         super().__init__(
             size=size, 
             auto_size=auto_size, 
@@ -40,11 +44,17 @@ class Window(BaseGraphicContainerObject):
         ''' pixels ''' 
         self._frame_pixel = Converter.toPixel(frame_pixel)
         
+        ''' interact_objects '''
+        self._select_index: int = 0
+        self._interact_objects: list[InteractiveWidget] = []
+        self.updateInteractWidgets()
+        self.add_object_event.add(self.updateInteractWidgets)
+        
         ''' other '''
         self._frame = frame
-    
-    def refresh(self):
-        super().refresh()
+        
+    async def refresh(self):
+        await super().refresh()
         
         if self.frame:
             frame_pixel: Pixel = Func.choisePixel(
@@ -55,7 +65,8 @@ class Window(BaseGraphicContainerObject):
             self._buffer.paste(
                 0, 0,
                 Drawer.frame(
-                    *self.size,
+                    self.width + self.padding.horizontal,
+                    self.height + self.padding.vertical,
                     frame_pixel.front_color, 
                     frame_pixel.back_color
                 )
@@ -65,6 +76,67 @@ class Window(BaseGraphicContainerObject):
         return super().getPadding() + (
             Vec4(1, 1, 1, 1) if self.frame else Vec4(0, 0, 0, 0)
         )
+    
+    def updateInteractWidgets(self):
+        def _f(container_object: BaseGraphicContainerObject) -> list[InteractiveWidget]:
+            widgets = []
+            for object in container_object:
+                if issubclass(object.__class__, BaseGraphicContainerObject):
+                    widgets += _f(object)
+                
+                if issubclass(object.__class__, InteractiveWidget):
+                    widgets.append(object)
+            return widgets
+        
+        self._interact_objects = _f(self._objects)
+        self.selectWidget(0) 
+    
+    
+    def _normalizeSelectIndex(self):
+        self._select_index = Func.normalizeIndex(self._select_index, len(self._interact_objects))
+    
+    def getSelectedWidget(self) -> Union[InteractiveWidget, None]:
+        if len(self._interact_objects) == 0:
+            return None
+        self._normalizeSelectIndex()
+        return self._interact_objects[self._select_index]
+    
+    def selectWidget(self, index: int):
+        if len(self._interact_objects) == 0:
+            return
+        
+        previous_widget = self.getSelectedWidget()
+        if previous_widget is not None:
+            previous_widget.selected = False
+            
+        self._select_index = index
+        self._normalizeSelectIndex()
+        
+        next_widget = self.getSelectedWidget()
+        if next_widget is not None:
+            next_widget.selected = True
+    
+    def selectNext(self):
+        self.selectWidget(self._select_index + 1)
+    
+    def selectPrevious(self):
+        self.selectWidget(self._select_index - 1)
+    
+    def inputKey(self, key: str) -> bool:
+        match key:
+            case Keys.UP:
+                self.selectPrevious()
+                
+            case Keys.DOWN:
+                self.selectNext()
+                
+            case _:
+                widget = self.getSelectedWidget()
+                if widget is not None:
+                    return widget.inputKey(key)
+                
+                return False
+        return True
     
     @property
     def open_event(self) -> Event:

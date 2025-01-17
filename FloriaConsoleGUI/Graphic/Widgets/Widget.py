@@ -44,18 +44,24 @@ class Widget(BaseGraphicObject):
     def __init__(
         self,
         size: Union[Vec2[int], Iterable[int]] = None,
+        min_size: Union[Vec2[int], Iterable[int]] = None,
+        max_size: Union[Vec2[int], Iterable[int]] = None,
         padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
+        can_be_moved: bool = True,
         *args, **kwargs
         ):
         super().__init__(
             size=size, 
+            min_size=min_size,
+            max_size=max_size,
             padding=padding,
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
-            name=name, 
+            name=name,
+            can_be_moved=can_be_moved,
             *args, **kwargs
         )
         

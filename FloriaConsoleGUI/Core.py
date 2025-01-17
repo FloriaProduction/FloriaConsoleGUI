@@ -11,7 +11,7 @@ from .Config import Config
 from .Threads import BaseThread, GraphicThread, SimulationThread, InputThread
 from .Classes.Event import Event
 from .Log import Log
-from .Managers import KeyboardManager as KeyM, posix_key, WindowManager
+from .Managers import KeyboardManager as KeyM, WindowManager, Keys
 from . import Func
 
 class Core:   
@@ -87,9 +87,11 @@ class Core:
                 input('Regedit has been modified, please restart the application\nPress to close...')
                 exit()
                 
-        KeyM.registerEvent('_close', posix_key.CTRL_C)
-        KeyM.bindEvent('_close', '\x00k') # alt+f4
-        KeyM.bind('_close', BaseThread.stopAll)
+        # KeyM.registerEvent('_close', Keys.CTRL_C)
+        # KeyM.bind('_close', BaseThread.stopAll)
+        
+        cls.SimulationThread.delay = (1/Config.SPS) if Config.SPS > 0 else 0
+        cls.GraphicThread.delay = (1/Config.FPS) if Config.FPS > 0 else 0
         
         cls.init_event.invoke()
         
@@ -102,6 +104,8 @@ class Core:
             raise RuntimeError('Core was not initialized')
         
         cls.init_event.invoke()
+        
+        cls._inited = False
         Log.writeOk('Terminated', cls)
     
     _dynamic_modules: dict[str, dict[str, any]] = {}

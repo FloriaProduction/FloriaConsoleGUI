@@ -3,20 +3,35 @@ import asyncio
 class Config:
     ASYNC_EVENT_LOOP = asyncio.get_event_loop()
     
-    SPS = 30
-    FPS = 30
+    SPS = 0
+    FPS = 0
     
-    CLEAR_LINES = 30
+    CLEAR_LINES = 45
+    
+    NEW_LINE_SYMBOL = ' '
+    
     
     # Core
     CORE_MODIFY_WIN_REGEDIT = True
     CORE_WRITE_WARNING_DYNAMIC_MODULE = True
+    
+    # Log
+    LOG_ERROR_DELAY = 4
+    LOG_WARNING_DELAY = 3
 
     # Parser
     PARSER_SKIP_UNKNOWED_ANNOTATIONS = True
     
+    TAB_LENGTH = 4
+    
     # Drawer
     DRAWER_MAX_SIZE_CACHE = 5
+    
+    # Pixel
+    PIXEL_COLOR_LIMIT = False
+    PIXEL_RED_DEPTH = 16
+    PIXEL_GREEN_DEPTH = 16
+    PIXEL_BLUE_DEPTH = 16
     
     # Debug
     DEBUG_SHOW_INPUT_KEY = False

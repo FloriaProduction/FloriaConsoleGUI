@@ -3,12 +3,13 @@ from typing import Union, Iterable, TypeVar
 from .Classes import Vec2, Vec3, Vec4, Anchor, Orientation
 from .Graphic.Pixel import Pixel, Pixels
 from .Graphic.Animation import Animation
+from .Config import Config
 
 TOVECX_T = TypeVar('TOVECX_T')
 def _toVecX(vec_type: type[TOVECX_T], data: Union[TOVECX_T, Iterable], default: TOVECX_T, allow_none: bool = False) -> TOVECX_T:
     if data is None:
         return default
-    if allow_none is False and None in data:
+    if allow_none is False and None in data or not isinstance(data, Iterable):
         raise ValueError()
     return data if isinstance(data, vec_type) else vec_type(*data)
 
@@ -53,3 +54,8 @@ def toOrientation(orientation: Union[Orientation, str]) -> Orientation:
     elif isinstance(orientation, str):
         return Orientation[orientation]
     raise ValueError()
+
+def toText(text: str) -> str:
+    return text.replace('\n', '\\n').replace('\t', ' ' * Config.TAB_LENGTH)
+def toMultilineText(text: str) -> str:
+    return text.replace('\t', ' ' * Config.TAB_LENGTH)

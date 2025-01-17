@@ -3,7 +3,7 @@ import asyncio
 from ..Log import Log
 from ..Threads import BaseThread
 from ..Config import *
-from ..Managers import KeyboardManager as KeyM, posix_key
+from ..Managers import KeyboardManager as KeyM
 
 
 class InputThread(BaseThread):
