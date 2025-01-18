@@ -6,7 +6,7 @@ RIGHT = '\x00M'
 CTRL_C = '\x03'
 CTRL_RIGHT = '\x00t'
 CTRL_LEFT = '\x00s'
-CTRL_BACKSPACE = '\x7f'#'\x17'
+CTRL_BACKSPACE = '\x7f'
 CTRL_DELETE = '\x00\xc2\x93'
 
 ENTER = '\r'

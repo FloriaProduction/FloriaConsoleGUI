@@ -5,11 +5,10 @@ from .Graphic.Pixel import Pixel, Pixels
 from .Graphic.Animation import Animation
 from .Config import Config
 
-TOVECX_T = TypeVar('TOVECX_T')
-def _toVecX(vec_type: type[TOVECX_T], data: Union[TOVECX_T, Iterable], default: TOVECX_T, allow_none: bool = False) -> TOVECX_T:
+def _toVecX(vec_type: type[any], data: Union[any, Iterable], default: any, allow_none: bool = False) -> any:
     if data is None:
         return default
-    if allow_none is False and None in data or not isinstance(data, Iterable):
+    if not isinstance(data, Iterable) or allow_none is False and None in data:
         raise ValueError()
     return data if isinstance(data, vec_type) else vec_type(*data)
 

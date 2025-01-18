@@ -1,6 +1,7 @@
 from typing import Union
 import sys
 import os
+from time import sleep
 
 from ..Log import Log
 from .. import Func
@@ -33,29 +34,44 @@ class Parser:
     
     @classmethod
     def checkUpdate(cls):
-        def parseWidgets(data: list[dict[str, any]]) -> list[Widget]:
-            widgets: list[Widget] = []
-            for widget_data in data:
-                widget: type[Widget] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Widgets'], widget_data.pop('class'))
-                
-                for attr in widget_data:
-                    if Config.PARSER_SKIP_UNKNOWED_ANNOTATIONS and attr not in widget.__init__.__annotations__:
-                        Log.writeNotice(f'widget "{widget.__name__}" attribute "{attr}" skipped', cls)
-                        continue
-                    
-                    attr_value = widget_data[attr]
-                    if isinstance(attr_value, str) and attr_value in temp:
-                        widget_data[attr] = temp[attr_value]
-                        
-                    match attr:
-                        case 'widgets':
-                            widget_data[attr] = parseWidgets(attr_value)
-                    
-                widgets.append(widget(**widget_data))
-            return widgets
-        
+        widgets_module = 'FloriaConsoleGUI.Graphic.Widgets'
+        window_module = 'FloriaConsoleGUI.Graphic.Windows'
         temp: dict[str, any] = {}
         
+        def parseGraphicObject(data: list[dict[str, any]]) -> list[Union[Window, Widget]]:
+            objects: list[Union[Window, Widget]] = []
+            for object_data in data:
+                object_class = object_data.pop('class')
+                
+                if object_class == 'temp':
+                    temp.update(object_data)
+                    continue
+                
+                object = Func.choiseValue(
+                    getattr(sys.modules[widgets_module], object_class, None),
+                    getattr(sys.modules[window_module], object_class, None)
+                )
+                
+                if object is None:
+                    raise RuntimeError()
+
+                for key, value in tuple(object_data.items()):
+                    if Config.PARSER_SKIP_UNKNOWED_ANNOTATIONS and key not in object.__init__.__annotations__:
+                        object_data.pop(key)
+                        Log.writeNotice(f'widget "{object.__name__}" attribute "{key}" skipped', cls)
+                        sleep(1)
+                        continue
+                    
+                    if isinstance(value, str) and value in temp:
+                        object_data[key] = temp[value]
+                    
+                    match key:
+                        case 'widgets':
+                            object_data[key] = parseGraphicObject(value)
+                    
+                objects.append(object(**object_data))
+            return objects
+                
         if cls._file_path is None:
             return
         
@@ -68,24 +84,14 @@ class Parser:
             Widget.removeAll()
             
             try:
-                for data in Func.readJson(cls._file_path):
-                    data_class = data.pop('class')
-                    match data_class:
-                        case 'temp':
-                            temp.update(data)
-                            
-                        case _:
-                            window: type[Window] = getattr(sys.modules['FloriaConsoleGUI.Graphic.Windows'], data_class)
-                            
-                            if 'widgets' in data:
-                                data['widgets'] = parseWidgets(data['widgets'])
-
-                            WindowManager.openNewWindow(
-                                window(**data)
-                            )
+                for window in parseGraphicObject(Func.readJson(cls._file_path)):
+                    WindowManager.openNewWindow(
+                        window
+                    )
                     
                 cls.builded_event.invoke()
                 Log.writeOk('windows builded!', cls)
+                sleep(1)
             except:
                 WindowManager.closeAll()
                 Widget.removeAll()

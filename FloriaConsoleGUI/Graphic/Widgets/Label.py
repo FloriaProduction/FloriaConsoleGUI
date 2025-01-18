@@ -64,13 +64,6 @@ class Label(Widget):
             self.text_anchor,
             self.padding
         )
-
-    def getSize(self) -> Vec2[int]:
-        size = super().getSize()
-        return Vec2(
-            max(size.width, len(self.text)),
-            max(size.height, 1)
-        )
     
     def setText(self, value: str):
         lines = [

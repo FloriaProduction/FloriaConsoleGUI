@@ -162,7 +162,6 @@ class BaseGraphicObject:
         self._max_size = value
         self.setFlagRefresh()
     
-    
     @property
     def name(self) -> Union[str, None]:
         return self._name

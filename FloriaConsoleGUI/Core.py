@@ -5,14 +5,13 @@ from typing import Union
 import importlib
 import time
 
-
-
 from .Config import Config
-from .Threads import BaseThread, GraphicThread, SimulationThread, InputThread
+from .Threads import *
 from .Classes.Event import Event
 from .Log import Log
 from .Managers import KeyboardManager as KeyM, WindowManager, Keys
 from . import Func
+
 
 class Core:   
     init_event: Event = Event()
@@ -119,10 +118,12 @@ class Core:
         
         if Config.CORE_WRITE_WARNING_DYNAMIC_MODULE and len(cls._dynamic_modules) == 0:
             Log.writeWarning(
-                '\nThis tool is unstable due to its features and may lead to errors\nIt is strongly recommended to only change variables inside the module\nNo complex logic', cls
+                '\nThis tool is unstable due to its features and may lead to errors\n' + 
+                'It is strongly recommended to only change variables inside the module\n' + 
+                'No complex logic', 
+                cls
             )
             time.sleep(0.5)
-            
         
         cls._dynamic_modules[path] = {
             'mtime': os.path.getmtime(path),
