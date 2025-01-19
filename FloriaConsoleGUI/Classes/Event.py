@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable, Iterable, overload
+from typing import Callable, overload
 
 from ..Log import Log
 

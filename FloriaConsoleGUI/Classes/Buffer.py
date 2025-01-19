@@ -4,6 +4,7 @@ import math
 from .Anchor import Anchor
 from .Vec import Vec2, Vec4
 
+
 _T = TypeVar('_T')
 
 class Buffer(Generic[_T]):

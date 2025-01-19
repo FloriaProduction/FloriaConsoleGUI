@@ -1,6 +1,7 @@
 from typing import Union, Callable, Generic, TypeVar, Iterable, overload
 from .Event import Event
 
+
 _T2 = TypeVar('_T2')
 class Vec2(Generic[_T2]):
     @overload
@@ -62,9 +63,6 @@ class Vec2(Generic[_T2]):
         
     def __len__(self) -> int:
         return len(self._prop_for_iter)
-        
-    # def __getitem__(self, index: int) -> _T2:
-    #     return self.__getattribute__(self._prop_for_iter[index])
     
     def __getitem__(self, index: Union[int, tuple[int]]) -> Union[tuple[_T2], _T2]:
         if isinstance(index, int):
@@ -154,6 +152,7 @@ class Vec3(Vec2, Generic[_T3]):
     @z.setter
     def z(self, value: _T3):
         self._setValue('_z', value)
+
 
 _T4 = TypeVar('_T4')
 class Vec4(Vec3, Generic[_T4]):

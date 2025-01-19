@@ -1,4 +1,3 @@
-from typing import Union, Iterable
 import os
 import playsound
 

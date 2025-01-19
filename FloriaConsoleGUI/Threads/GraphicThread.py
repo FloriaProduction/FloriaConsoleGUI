@@ -1,13 +1,9 @@
-import os, sys
-from typing import Union, Iterable
+import sys
 
 from ..Classes import Buffer
-from ..Log import Log
 from ..Threads import BaseThread
 from ..Managers.WindowManager import WindowManager
-from ..Graphic.Pixel import Pixel, Pixels
-from ..Graphic.Widgets import Widget
-from ..Graphic.Windows import Window
+from ..Graphic.Pixel import Pixel
 from ..Config import Config
 from .. import Func
 

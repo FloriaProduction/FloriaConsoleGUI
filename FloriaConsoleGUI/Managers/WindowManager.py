@@ -1,14 +1,11 @@
 from typing import Union, Iterable
-import sys
 
-from ..Graphic.Pixel import Pixel, Pixels
-from ..Graphic.Widgets import Widget
+from ..Graphic.Pixel import Pixel
 from ..Graphic.Windows import Window
-from ..Classes import Buffer, Vec2, Anchor, Orientation
-from ..Log import Log
-from ..Config import Config
+from ..Classes import Buffer
 from .KeyboardManager import KeyboardManager
 from .. import Func
+
 
 class WindowManager:
     _window_queue: list[Window] = []
@@ -17,7 +14,9 @@ class WindowManager:
     @classmethod
     def openNewWindow(cls, window: Window, switch_current_window: bool = True):
         if window.name is not None and cls.getByName(window.name) is not None:
-            raise ValueError(f'Window name "{window.name}" already used')
+            raise ValueError(
+                f'Window name "{window.name}" already used'
+            )
         
         cls._window_queue.append(window)
         if switch_current_window:
@@ -84,23 +83,19 @@ class WindowManager:
             buffer.paste(*window[0], window[1])
         
         return buffer
-
+    
     @classmethod
-    def pressed(cls, key: str, **kwargs):       
+    def press(cls, key: str, **kwargs):       
         window_current = cls.getCurrent()
         if window_current is None:
             return
         
-        # match char:
-        #     case '\x00H':
-        #         window_current.selectPrevious()
-        #     case '\x00P':
-        #         window_current.selectNext()
-        #     case _:
         window_current.inputKey(key)
         
     @classmethod
     def _normalizeIndexCurrentWindow(cls):
         cls._index_current_window = Func.normalizeIndex(cls._index_current_window, len(cls._window_queue))
     
-KeyboardManager.pressed_event.add(WindowManager.pressed)
+KeyboardManager.pressed_event.add(
+    WindowManager.press
+)

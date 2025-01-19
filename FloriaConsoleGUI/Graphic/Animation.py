@@ -5,6 +5,7 @@ import math
 from ..Classes import Vec2, Buffer, Event
 from ..Graphic.Pixel import Pixel
 
+
 class Animation:
     def __init__(
         self, 

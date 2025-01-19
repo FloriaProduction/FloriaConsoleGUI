@@ -3,6 +3,7 @@ from typing import Union, Iterable, overload
 from ..Classes import Vec3
 from ..Config import Config
 
+
 class Pixel:
     empty: 'Pixel' = None
     clearANSII = f'\033[0m'
@@ -51,8 +52,6 @@ class Pixel:
             new_pixel.back_color = back_color    
         
         return new_pixel
-    
-    
     
     # WIP
     

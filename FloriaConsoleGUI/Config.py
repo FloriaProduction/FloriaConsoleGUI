@@ -16,8 +16,8 @@ class Config:
     CORE_WRITE_WARNING_DYNAMIC_MODULE = True
     
     # Log
-    LOG_ERROR_DELAY = 4
-    LOG_WARNING_DELAY = 3
+    LOG_ERROR_DELAY = 2
+    LOG_WARNING_DELAY = 1
 
     # Parser
     PARSER_SKIP_UNKNOWED_ANNOTATIONS = True

@@ -1,16 +1,15 @@
 from typing import Union, Iterable
-import numpy as np 
 
-from ..BaseGraphicObject import BaseGraphicObject, BaseGraphicContainerObject
-from ..Pixel import Pixel, Pixels
+from ..BaseGraphicObject import BaseGraphicContainerObject
+from ..Pixel import Pixel
 from ..Drawer import Drawer
 from ..Widgets.Widget import Widget
 from ..Widgets.InteractiveWidget import InteractiveWidget
-from ...Classes import Buffer, Event, Vec2, Vec3, Vec4, Keys, Orientation
-from ...Log import Log
+from ...Classes import Event, Vec2, Vec3, Vec4, Keys, Orientation
 
 from ... import Converter
 from ... import Func
+
 
 class Window(BaseGraphicContainerObject):    
     def __init__(
@@ -102,7 +101,6 @@ class Window(BaseGraphicContainerObject):
         
         self._interact_objects = _f(self._objects)
         self.selectWidget(0) 
-    
     
     def _normalizeSelectIndex(self):
         self._select_index = Func.normalizeIndex(self._select_index, len(self._interact_objects))

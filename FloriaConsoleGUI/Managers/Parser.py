@@ -1,7 +1,6 @@
 from typing import Union
 import sys
 import os
-from time import sleep
 
 from ..Log import Log
 from .. import Func
@@ -13,6 +12,7 @@ from ..Config import Config
 
 from ..Graphic.Windows import *
 from ..Graphic.Widgets import *
+
 
 class Parser:
     _file_path: Union[str, None] = None
@@ -31,7 +31,6 @@ class Parser:
         
         cls.checkUpdate()
         
-    
     @classmethod
     def checkUpdate(cls):
         widgets_module = 'FloriaConsoleGUI.Graphic.Widgets'

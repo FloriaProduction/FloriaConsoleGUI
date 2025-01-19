@@ -10,8 +10,8 @@ class Media(Widget):
     def __init__(
         self,
         size: Union[Vec2[int], Iterable[int]] = None,
-        min_size: Union[Vec2[int], Iterable[int]] = None,
-        max_size: Union[Vec2[int], Iterable[int]] = None,
+        min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
+        max_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
         padding: Union[Vec4[int], Iterable[int]] = None,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,

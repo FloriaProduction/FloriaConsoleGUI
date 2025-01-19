@@ -2,7 +2,6 @@ import readchar
 from typing import Union, Callable
 
 from ..Config import Config
-from ..Classes import Keys
 from ..Log import Log
 
 from ..Classes.Event import Event, EventKwargs

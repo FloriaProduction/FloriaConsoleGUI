@@ -4,9 +4,7 @@ from ..Classes import Buffer, Vec3
 from .Pixel import Pixel
 from ..Config import Config
 
-# ┘ └ │ ├ ┬
-# ┐ ┌ ─ ┴ ┤ ┼
-        
+ 
 class FramePixel(Pixel):
     pass
 
@@ -24,7 +22,10 @@ class Drawer:
         return '_'.join([f'{key}:{value}' for key, value in kwargs.items()])
     
     @classmethod
-    def frame(cls, width: int, height: int, front_color: Union[Vec3, None], back_color: Union[Vec3, None]) -> Buffer[Pixel]:        
+    def frame(cls, width: int, height: int, front_color: Union[Vec3, None], back_color: Union[Vec3, None]) -> Buffer[Pixel]:   
+        # ┘ └ │ ├ ┬
+        # ┐ ┌ ─ ┴ ┤ ┼
+             
         if width == 0 or height == 0:
             return Buffer.empty
         

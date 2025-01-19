@@ -1,5 +1,4 @@
 import asyncio
-import time
 
 from ..Classes import Event, Counter
 from ..Log import Log

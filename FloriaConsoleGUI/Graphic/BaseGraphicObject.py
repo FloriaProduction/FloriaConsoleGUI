@@ -1,7 +1,7 @@
 from typing import Union, Iterable
 
 from ..Classes import Vec2, Vec3, Vec4, Event, Buffer, Orientation
-from .Pixel import Pixel, Pixels
+from .Pixel import Pixel
 from .. import Converter
 
 
