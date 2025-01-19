@@ -22,13 +22,13 @@ class AnimationManager:
         return cls._animations[name].copy()
     
     @classmethod
-    def register(cls, name: str, animation: Animation):
-        if name in cls._animations:
-            raise ValueError(
-                f'Animation with name "{name}" already exists'
-            )
+    def register(cls, name: str, animation: Animation, rewrite: bool = False):
+        if name in cls._animations and not rewrite:
+            Log.writeWarning(f'Animation "{name}" already registered', cls)
+            return
+        
         cls._animations[name] = animation
-        Log.writeOk(f'Animation "{name}" loaded', cls)
+        Log.writeOk(f'Animation "{name}" registered', cls)
     
     @classmethod
     def load(cls, path: str):
@@ -37,7 +37,7 @@ class AnimationManager:
             [
                 {
                     name: `str` - animation name,
-                    path: `str` - path to img/jpg/jpeg/gif,
+                    path: `str` - path to img/jpeg/gif,
                     delay: `float` default=get from source file - delay between frames,
                     loop: `bool` default=True - animation is looped
                 }, \n

@@ -1,12 +1,11 @@
-from typing import Union, Iterable, Unpack
+from typing import Union, Iterable
 
 from ...Classes import Vec2, Vec3, Vec4, Event, Buffer, Keys, Anchor
 from .InteractiveWidget import InteractiveWidget
 from ..Pixel import Pixel, Pixels
 from ... import Converter
 from ... import Func
-from ..Drawer import Drawer
-from ...Config import Config
+
 
 class TextBox(InteractiveWidget):
     def __init__(
@@ -50,7 +49,7 @@ class TextBox(InteractiveWidget):
         self._caret = 0
         self._caret_pixel = Converter.toPixel(caret_pixel, Pixels.black_white)
     
-    async def renderTextBuffer(self):
+    async def renderTextBuffer(self) -> Buffer[Pixel]:
         text_buffer = await super().renderTextBuffer(True)
         
         if text_buffer.width > 0 and text_buffer.height > 0 and self.selected:
@@ -66,19 +65,19 @@ class TextBox(InteractiveWidget):
         
         return text_buffer
     
-    def pasteText(self, text: chr):
+    def pasteText(self, symbol: chr):
         lines = self.text.split('\n')
         lines_slice = self.text[:self.caret].split('\n')
         line_width = len(lines[len(lines_slice)-1])
         line_height = len(lines)
         
         # добавить проверку text на multiline
-        if (self.text_max_size.width is not None and line_width >= self.text_max_size.width and '\n' not in text) or \
-            (self.text_max_size.height is not None and line_height >= self.text_max_size.height and '\n' in text):
+        if (self.text_max_size.width is not None and line_width >= self.text_max_size.width and '\n' not in symbol) or \
+            (self.text_max_size.height is not None and line_height >= self.text_max_size.height and '\n' in symbol):
             return
         
-        self.text = self.text[:self.caret] + text + self.text[self.caret:]
-        self.caret += len(text)
+        self.text = self.text[:self.caret] + symbol + self.text[self.caret:]
+        self.caret += len(symbol)
     
     def deleteSymbol(self, move_caret: bool, count: int = 1):
         if move_caret and self.caret > 0:
@@ -89,34 +88,45 @@ class TextBox(InteractiveWidget):
             self.deleteSymbol(move_caret, count-1)
     
     def inputKey(self, key: str) -> bool:
+        break_word_symbols = [' ', '\n']
+        
         match key:
             case Keys.LEFT | Keys.CTRL_LEFT:
                 self.caret -= 1
                 
                 if key == Keys.CTRL_LEFT:
-                    while 1 <= self.caret < len(self.text) and self.text[self.caret] == ' ':
+                    while 1 <= self.caret < len(self.text) and self.text[self.caret] in break_word_symbols:
                         self.caret -= 1
                         
-                    while 1 <= self.caret < len(self.text) and self.text[self.caret] != ' ':
+                    while 1 <= self.caret < len(self.text) and self.text[self.caret] not in break_word_symbols:
                         self.caret -= 1
                     
-            
             case Keys.RIGHT | Keys.CTRL_RIGHT:
                 self.caret += 1
                 
                 if key == Keys.CTRL_RIGHT:
-                    while 0 <= self.caret < len(self.text) and self.text[self.caret] == ' ':
+                    while 0 <= self.caret < len(self.text) and self.text[self.caret] in break_word_symbols:
                         self.caret += 1
                     
-                    while 0 <= self.caret < len(self.text) and self.text[self.caret] != ' ':
+                    while 0 <= self.caret < len(self.text) and self.text[self.caret] not in break_word_symbols:
                         self.caret += 1
-                    
             
             case Keys.BACKSPACE | Keys.CTRL_BACKSPACE:
                 self.deleteSymbol(True)
                 
+                if key == Keys.CTRL_BACKSPACE:
+                    pass
+                
             case Keys.DELETE | Keys.CTRL_DELETE:
                 self.deleteSymbol(False)
+            
+            case Keys.HOME:
+                self.caret = sum(map(lambda line: len(line) + 1, self.text[:self.caret].split('\n')[:-1]))
+            
+            case Keys.END:
+                # caret = sum( len( lines [:caret] ) ) + len( current line )
+                strip_lines = self.text[:self.caret].split('\n')
+                self.caret = sum(map(lambda line: len(line) + 1, strip_lines[:-1])) + len(self.text.split('\n')[len(strip_lines)-1])
                 
             case Keys.ENTER:
                 self.pasteText('\n')

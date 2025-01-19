@@ -36,15 +36,15 @@ class Drawer:
             pixel = FramePixel(front_color, back_color)
             
             for x in range(1, width-1):
-                buffer[x, 0] = buffer[x, height-1] = Pixel.changePixel(pixel, '─')
+                buffer[x, 0] = buffer[x, height-1] = Pixel.changePixel(pixel, symbol='─')
                 
             for y in range(1, height-1):
-                buffer[0, y] = buffer[width-1, y] = Pixel.changePixel(pixel, '│')
+                buffer[0, y] = buffer[width-1, y] = Pixel.changePixel(pixel, symbol='│')
             
-            buffer[0, 0]              = Pixel.changePixel(pixel, '┌')
-            buffer[0, height-1]       = Pixel.changePixel(pixel, '└')
-            buffer[width-1, 0]        = Pixel.changePixel(pixel, '┐')
-            buffer[width-1, height-1] = Pixel.changePixel(pixel, '┘')
+            buffer[0, 0]              = Pixel.changePixel(pixel, symbol='┌')
+            buffer[0, height-1]       = Pixel.changePixel(pixel, symbol='└')
+            buffer[width-1, 0]        = Pixel.changePixel(pixel, symbol='┐')
+            buffer[width-1, height-1] = Pixel.changePixel(pixel, symbol='┘')
             
             cls._putToCache(key, buffer)
             

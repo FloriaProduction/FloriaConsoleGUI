@@ -19,7 +19,7 @@ class BaseGraphicObject:
         *args, **kwargs
         ):
         
-        ''' events '''
+        # events 
         self.__resize_event = Event(
             self.setFlagRefresh
         )
@@ -28,7 +28,7 @@ class BaseGraphicObject:
         )
         self.__set_refresh_event = Event()
         
-        ''' size and pos '''
+        # size and pos
         self._offset_pos = Converter.toVec3(offset_pos)
         self._size = Converter.toVec2(size)
         self._padding: Vec4[int] = Converter.toVec4(padding)
@@ -36,16 +36,16 @@ class BaseGraphicObject:
         self._max_size = Converter.toVec2(max_size, Vec2(None, None), True)
         self._can_be_moved = can_be_moved
         
-        ''' buffers '''
+        # buffers
         self._buffer: Buffer[Pixel] = None
         
-        ''' pixels '''
+        # pixels
         self._clear_pixel = Converter.toPixel(clear_pixel)
         
-        ''' flags '''
+        # flags
         self._flag_refresh = True
         
-        ''' other '''
+        # other
         self._name = name
     
     async def refresh(self):
@@ -260,7 +260,7 @@ class BaseGraphicContainerObject(BaseGraphicObject):
         self._objects: list['BaseGraphicObject'] = []
         for object in Converter.toListObjects(objects):
             self.addObject(object)
-        self._direction: Orientation = Converter.toOrientation(direction)
+        self._direction: Orientation = Converter.toOrientation(direction) if direction is not None else None
         self._gap: int = gap
         
         ''' buffers '''

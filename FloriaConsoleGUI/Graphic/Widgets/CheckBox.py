@@ -6,6 +6,7 @@ from .Button import Button
 from ... import Converter
 from ... import Func
 
+
 class CheckBox(Button):
     def __init__(
         self, 

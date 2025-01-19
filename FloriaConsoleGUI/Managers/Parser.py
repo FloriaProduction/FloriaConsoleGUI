@@ -59,7 +59,6 @@ class Parser:
                     if Config.PARSER_SKIP_UNKNOWED_ANNOTATIONS and key not in object.__init__.__annotations__:
                         object_data.pop(key)
                         Log.writeNotice(f'widget "{object.__name__}" attribute "{key}" skipped', cls)
-                        sleep(1)
                         continue
                     
                     if isinstance(value, str) and value in temp:
@@ -91,7 +90,6 @@ class Parser:
                     
                 cls.builded_event.invoke()
                 Log.writeOk('windows builded!', cls)
-                sleep(1)
             except:
                 WindowManager.closeAll()
                 Widget.removeAll()

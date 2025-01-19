@@ -13,4 +13,7 @@ ENTER = '\r'
 BACKSPACE = '\x08'
 DELETE = '\x00S'
 
+HOME = '\x00G'
+END = '\x00O'
+
 SPACE = ' '

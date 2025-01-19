@@ -1,11 +1,9 @@
-from random import randint as rd
-from typing import Union, Iterable, TypeVar
+from typing import Union, Iterable
 
 from ..BaseGraphicObject import BaseGraphicObject
 from ..Pixel import Pixel
-from ...Classes import Buffer, Vec2, Vec3, Vec4, Event, Counter
+from ...Classes import Vec2, Vec3, Vec4, Counter
 
-from ... import Converter
 
 class Widget(BaseGraphicObject):
     _widgets: dict[str, 'Widget'] = {}
@@ -26,20 +24,6 @@ class Widget(BaseGraphicObject):
     @classmethod
     def removeAll(cls):
         cls._widgets.clear()
-    
-    @classmethod
-    def generateNewWidgetWithName(cls, widget_class: 'Widget', *args, **kwargs) -> 'Widget':
-        if not issubclass(widget_class, cls):
-            raise ValueError(f'Class "{widget_class.__name__}" is not subclass {cls.__name__}')
-        
-        class_name = widget_class.__name__
-        cls._counter.add(class_name)
-        
-        kwargs.update({
-            "name": f'{class_name}_{cls._counter.get(class_name)}'
-        })
-        
-        return widget_class(*args, **kwargs)
     
     def __init__(
         self,

@@ -4,6 +4,7 @@ from ...Classes import Vec2, Vec3, Vec4, Event, Anchor, Keys
 from ..Pixel import Pixel
 from .InteractiveWidget import InteractiveWidget
 
+
 class Button(InteractiveWidget):
     def __init__(
         self,

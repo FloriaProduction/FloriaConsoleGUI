@@ -51,7 +51,7 @@ class WindowManager:
     def getCurrent(cls) -> Union[Window, None]:
         '''
             if count(windows) == 0
-                return 'None'
+                return `None`
             else
                 return `windows[index_current_window]`
         '''
@@ -103,4 +103,4 @@ class WindowManager:
     def _normalizeIndexCurrentWindow(cls):
         cls._index_current_window = Func.normalizeIndex(cls._index_current_window, len(cls._window_queue))
     
-KeyboardManager.addHandlerToPressedEvent(WindowManager.pressed)
+KeyboardManager.pressed_event.add(WindowManager.pressed)

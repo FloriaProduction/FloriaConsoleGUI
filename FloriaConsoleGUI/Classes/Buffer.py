@@ -47,7 +47,7 @@ class Buffer(Generic[_T]):
         array_height: int, 
         array: Iterable, 
         padding: Vec4 = Vec4(0, 0, 0, 0), 
-        func: Callable[[int, int, _T, _T], _T]=None
+        func: Callable[[int, int, int, int, int, int, int, int, _T, _T], _T]=None
     ):
         if array is None or array_width == 0 or array_height == 0:
             return
@@ -113,7 +113,7 @@ class Buffer(Generic[_T]):
         offset_y: int, 
         buffer: Union['Buffer', None], 
         padding: Vec4 = Vec4(0, 0, 0, 0), 
-        func: Callable[[int, int, _T, _T], _T]=None
+        func: Callable[[int, int, int, int, int, int, int, int, _T, _T], _T]=None
     ):
         if buffer is None:
             return
@@ -132,7 +132,7 @@ class Buffer(Generic[_T]):
         buffer: Union['Buffer', None], 
         anchor: Anchor = Anchor.left_top, 
         padding: Vec4 = Vec4(0, 0, 0, 0), 
-        func: Callable[[int, int, _T, _T], _T]=None
+        func: Callable[[int, int, int, int, int, int, int, int, _T, _T], _T]=None
     ):
         offset_x_calc = math.floor((self.width - padding.left - padding.right) / 2 - buffer.width/2)
         match anchor:
@@ -167,28 +167,45 @@ class Buffer(Generic[_T]):
     def get(self, x: int, y: int) -> _T:
         return self._data[y * self.width + x]
     
-    def convert(self, func: Callable[[_T], any]) -> 'Buffer':
+    @staticmethod
+    def convertFunction(
+        x: int, 
+        y: int, 
+        width: int, 
+        height: int,
+        item: Union[any, None],
+    ):
+        return item
+    
+    def convert(self, func: Callable[[int, int, int, int, _T], _T]) -> 'Buffer':
         '''
             Create and convert a buffer\n
             `Don't modify` this buffer, just `create a new one`
         '''
         
-        return Buffer(*self.size, self._defualt_value, (func(item) for item in self._data))        
+        return Buffer(*self.size, self._defualt_value, 
+        [
+            [
+                func(x, y, self.width, self.height, self.get(x, y)) 
+                for x in range(self.width)
+            ] 
+            for y in range(self.height)
+        ])      
     
     def resize(self, width: int, height: int) -> 'Buffer':
+        '''
+            Create a resized copy
+        '''
         if self.size == (width, height):
             return self.copy()
         
         buffer = Buffer(width, height, self._defualt_value)
         
-        xk = self.width / width 
-        yk = self.height / height
-        
         for y in range(buffer.height):
             for x in range(buffer.width):
                 buffer[x, y] = self[
-                    min(max(math.floor(x*xk), 0), self.width-1), 
-                    min(max(math.floor(y*yk), 0), self.height-1)
+                    min(max(math.floor(x * (self.width / width)), 0), self.width-1), 
+                    min(max(math.floor(y * (self.height / height)), 0), self.height-1)
                 ]
         
         return buffer

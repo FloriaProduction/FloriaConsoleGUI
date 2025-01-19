@@ -1,4 +1,4 @@
-from typing import Union, Iterable
+from typing import Union, Iterable, overload
 
 from ..Classes import Vec3
 from ..Config import Config
@@ -26,12 +26,20 @@ class Pixel:
         return Pixel(back_color=Vec3(br, bg, bb), symbol=symbol)
     
     @staticmethod
-    def changePixel(pixel: Union['Pixel', None], symbol: chr = None, front_color: Vec3 = None, back_color: Vec3 = None) -> Union['Pixel', None]:
+    @overload
+    def changePixel(pixel: Union['Pixel', None], symbol: chr = None, front_color: Vec3 = None, back_color: Vec3 = None) -> Union['Pixel', None]: ...
+
+    @staticmethod
+    def changePixel(pixel: Union['Pixel', None], **kwargs):
         '''
             create a copy of the pixel and change it
         '''
         
         new_pixel = pixel.copy() if pixel is not None else Pixel.empty.copy()
+        
+        symbol = kwargs.get('symbol')
+        front_color = kwargs.get('front_color')
+        back_color = kwargs.get('back_color')
         
         if symbol is not None:
             new_pixel.symbol = symbol
@@ -43,6 +51,8 @@ class Pixel:
             new_pixel.back_color = back_color    
         
         return new_pixel
+    
+    
     
     # WIP
     

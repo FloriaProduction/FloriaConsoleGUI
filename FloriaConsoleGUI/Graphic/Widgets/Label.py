@@ -1,4 +1,4 @@
-from typing import Union, Iterable, Unpack
+from typing import Union, Iterable
 
 from ...Classes import Vec2, Vec3, Vec4, Event, Buffer, Anchor
 from .Widget import Widget
@@ -6,7 +6,7 @@ from ..Pixel import Pixel
 from ... import Converter
 from ... import Func
 from ..Drawer import Drawer
-from ...Config import Config
+
 
 class Label(Widget):
     def __init__(

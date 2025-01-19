@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='FloriaConsoleGUI',
-    version='1.0.7',
+    version='1.1.2',
     author='FloriaProduction',
     author_email='FloriaProduction@yandex.ru',
     description='Framework for console GUI apps',
@@ -18,7 +18,7 @@ setup(
         "Source": 'https://github.com/FloriaProduction/FloriaConsoleGUI',
     },
     packages=find_packages(),
-    install_requires=['readchar'],
+    install_requires=['readchar', 'pillow', 'playsound==1.2.2'],
     classifiers=[
         'Programming Language :: Python :: 3.12',
         'License :: OSI Approved :: Apache Software License',

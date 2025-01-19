@@ -7,6 +7,7 @@ from ...Classes import Vec2, Vec3, Vec4, Orientation
 from ..Drawer import Drawer
 from ... import Func, Converter
 
+
 class Frame(Container):
     def __init__(
         self, 
@@ -58,7 +59,8 @@ class Frame(Container):
         self._buffer.paste(
             0, 0,
             Drawer.frame(
-                *self.size, 
+                self.width + self.padding.horizontal,
+                self.height + self.padding.vertical, 
                 frame_pixel.front_color,
                 frame_pixel.back_color
             ),

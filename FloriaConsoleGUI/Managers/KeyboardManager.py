@@ -11,14 +11,7 @@ class KeyboardManager:
     _events: dict[str, Event] = {}
     _event_binds: dict[str, set[str]] = {}
     
-    _pressed_event: EventKwargs = EventKwargs()
-    
-    @classmethod
-    def addHandlerToPressedEvent(cls, func: Callable[[any], None]):
-        '''
-            func like this: `func(char: chr, **kwargs) -> None`
-        '''
-        cls._pressed_event.add(func)
+    pressed_event: EventKwargs = EventKwargs()
     
     @classmethod
     def registerEvent(cls, event_name: str, key: Union[str, None] = None):
@@ -51,15 +44,15 @@ class KeyboardManager:
 
     @classmethod
     def simulation(cls):
-        key = readchar.readkey()
+        readkey = readchar.readkey()
         if Config.DEBUG_SHOW_INPUT_KEY:
-            Log.writeNotice(f'pressed {key}', cls)
+            Log.writeNotice(f'pressed {readkey}', cls)
         
         for key, event_names in cls._event_binds.items():
-            if key == key:
+            if readkey == key:
                 for event_name in event_names:
                     cls._events[event_name].invoke()
 
-        cls._pressed_event.invoke(key=key)
+        cls.pressed_event.invoke(key=readkey)
         
-        Config.debug_data['last pressed key'] = key.encode()
+        Config.debug_data[cls.__name__] = readkey.encode()

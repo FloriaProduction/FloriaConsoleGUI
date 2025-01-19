@@ -14,14 +14,14 @@ from . import Func
 
 
 class Core:   
-    init_event: Event = Event()
+    initialized_event: Event = Event()
     term_event: Event = Event()
     
-    init_all_event = BaseThread.init_all_event
+    initialized_all_threads_event = BaseThread.init_all_event
     
-    GraphicThread = GraphicThread()
-    SimulationThread = SimulationThread()
-    InputThread = InputThread()
+    graphic_thread: GraphicThread = None #GraphicThread()
+    simulation_thread: SimulationThread = None #SimulationThread()
+    input_thread: InputThread = None # InputThread()
 
     _inited = False
     _tasks: list[asyncio.Task] = []
@@ -54,7 +54,23 @@ class Core:
             Config.ASYNC_EVENT_LOOP.stop()
             
     @classmethod
-    def init(cls):
+    def init(
+        cls, 
+        graphic_thread: type[GraphicThread] = GraphicThread,
+        simulation_thread: type[SimulationThread] = SimulationThread,
+        input_thread: type[InputThread] = InputThread
+    ):
+        if not issubclass(graphic_thread, GraphicThread):
+            raise ValueError(f'{graphic_thread} is not subclass GraphicThread')
+        if not issubclass(simulation_thread, SimulationThread):
+            raise ValueError(f'{simulation_thread} is not subclass SimulationThread')
+        if not issubclass(input_thread, InputThread):
+            raise ValueError(f'{input_thread} is not subclass InputThread')
+        
+        cls.graphic_thread = graphic_thread()
+        cls.simulation_thread = simulation_thread()
+        cls.input_thread = input_thread()
+        
         if Config.CORE_MODIFY_WIN_REGEDIT and sys.platform == 'win32':
             import winreg
             
@@ -86,13 +102,13 @@ class Core:
                 input('Regedit has been modified, please restart the application\nPress to close...')
                 exit()
                 
-        # KeyM.registerEvent('_close', Keys.CTRL_C)
-        # KeyM.bind('_close', BaseThread.stopAll)
+        KeyM.registerEvent('_close', Keys.CTRL_C)
+        KeyM.bind('_close', BaseThread.stopAll)
         
-        cls.SimulationThread.delay = (1/Config.SPS) if Config.SPS > 0 else 0
-        cls.GraphicThread.delay = (1/Config.FPS) if Config.FPS > 0 else 0
+        cls.simulation_thread.delay = (1/Config.SPS) if Config.SPS > 0 else 0
+        cls.graphic_thread.delay = (1/Config.FPS) if Config.FPS > 0 else 0
         
-        cls.init_event.invoke()
+        cls.initialized_event.invoke()
         
         cls._inited = True
         Log.writeOk('Initialized', cls)
@@ -102,10 +118,18 @@ class Core:
         if cls._inited is False:
             raise RuntimeError('Core was not initialized')
         
-        cls.init_event.invoke()
+        cls.initialized_event.invoke()
         
         cls._inited = False
         Log.writeOk('Terminated', cls)
+    
+    @classmethod
+    def stop(cls):
+        BaseThread.stopAll()
+    
+    @classmethod
+    def setConsoleName(cls, name: str):
+        os.system(f'title {name}')
     
     _dynamic_modules: dict[str, dict[str, any]] = {}
     @classmethod

@@ -5,7 +5,7 @@ from ..Log import Log
 
 class Event:
     @overload
-    def __init__(self, *args, error_ignored: bool = False): ...
+    def __init__(self, *args, error_ignored: bool = False, await_input: bool = True): ...
     
     def __init__(self, *args: Callable[[any], None], **kwargs):
         self._funcs: dict[str, Callable[[any], None]] = {}
@@ -13,10 +13,11 @@ class Event:
             self.add(func)
             
         self._error_ignored = kwargs.get('error_ignored', False)
+        self._await_input = kwargs.get('await_input', True)
     
-    def dec(self, func, *args, **kwargs):
+    def dec(self, func):
         '''
-            Add func in event
+            @Decorator: Adding function in event
         '''
         self.add(func)
      
@@ -25,12 +26,12 @@ class Event:
             if not issubclass(func.__class__, Callable):
                 raise ValueError('The resulting function is not such')
             self._funcs[f'{func.__module__}.{func.__name__}_{tuple(func.__annotations__.keys())}'] = func
-
+    
     def invoke(self, *args, **kwargs):
         functions = tuple(self._funcs.values())
         for func in functions:
             try:
-                res = func(*args, **kwargs)
+                res = func(*args, **kwargs) if len(func.__annotations__) > 0 else func()
                 if asyncio.iscoroutine(res):
                     raise 
                 
@@ -38,6 +39,8 @@ class Event:
                 if not self._error_ignored:
                     raise ex
                 Log.writeError()
+                if self._await_input:
+                    input('Press to continue...')
                 
                 
     async def invokeAsync(self, *args, **kwargs):
@@ -51,6 +54,8 @@ class Event:
                 if not self._error_ignored:
                     raise ex
                 Log.writeError()
+                if self._await_input:
+                    input('Press to continue...')
 
 
 class EventKwargs(Event):

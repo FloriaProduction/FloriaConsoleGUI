@@ -4,7 +4,7 @@ from .Drawer import Drawer
 from .Animation import Animation
 
 __all__ = [
-    'Pixel', 'Pixels'
+    'Pixel', 'Pixels',
     'Windows', 
     'Widgets',
     'Drawer',

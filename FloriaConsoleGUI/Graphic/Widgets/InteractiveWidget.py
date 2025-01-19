@@ -1,9 +1,10 @@
-from typing import Union, Iterable, Unpack
+from typing import Union, Iterable
 
-from ...Classes import Vec2, Vec3, Vec4, Event, Buffer, Anchor
+from ...Classes import Vec2, Vec3, Vec4, Event, Anchor
 from .Label import Label
 from ..Pixel import Pixel
 from ... import Converter
+
 
 class InteractiveWidget(Label):
     def __init__(
