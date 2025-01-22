@@ -52,6 +52,8 @@ class Buffer(Generic[_T]):
     ):
         if array is None or array_width == 0 or array_height == 0:
             return
+        if array_width*array_height != len(array):
+            raise ValueError()
         
         for y in range(
             max(
@@ -164,8 +166,12 @@ class Buffer(Generic[_T]):
         self._data = [value if value is not None else self._defualt_value] * (self.width * self.height)
     
     def set(self, x: int, y: int, value: _T):
+        if not(0 <= x < self.width and 0 <= y < self.height):
+            return
         self._data[y * self.width + x] = value
     def get(self, x: int, y: int) -> _T:
+        if not(0 <= x < self.width and 0 <= y < self.height):
+            raise ValueError()
         return self._data[y * self.width + x]
     
     @staticmethod

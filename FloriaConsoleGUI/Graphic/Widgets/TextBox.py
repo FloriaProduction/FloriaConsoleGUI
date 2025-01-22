@@ -1,13 +1,13 @@
 from typing import Union, Iterable
 
 from ...Classes import Vec2, Vec3, Vec4, Event, Buffer, Keys, Anchor
-from .InteractiveWidget import InteractiveWidget
+from .InteractiveLabel import InteractiveLabel
 from ..Pixel import Pixel, Pixels
 from ... import Converter
 from ... import Func
 
 
-class TextBox(InteractiveWidget):
+class TextBox(InteractiveLabel):
     def __init__(
         self, 
         text: str = 'TextBox',

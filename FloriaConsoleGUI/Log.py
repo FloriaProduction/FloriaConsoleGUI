@@ -3,6 +3,7 @@ from traceback import format_exc
 from time import sleep
 from .Config import Config
 
+
 class Log:
     _min_state = _min_name = 0
 
@@ -76,5 +77,3 @@ class Log:
             state_color='\033[33;49m', 
             message_color='\033[37;49m'
         )
-
-

@@ -16,12 +16,11 @@ class TitledWindow(Window):
             min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
             max_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
             padding: Union[Vec4[int], Iterable[int]] = None,
-            auto_size: bool = False,
             offset_pos: Union[Vec3[int], Iterable[int]] = None, 
             clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
             name: Union[str, None] = None,
             widgets: Union[Iterable[Widget], Widget] = [], 
-            direction: Union[Orientation, None] = Orientation.horizontal,
+            direction: Union[Orientation, None] = None,
             gap: int = 0,
             can_be_moved: bool = True,
             frame: bool = False,
@@ -41,7 +40,6 @@ class TitledWindow(Window):
             min_size=min_size,
             max_size=max_size,
             padding=padding,
-            auto_size=auto_size,
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
             name=name, 
@@ -100,11 +98,11 @@ class TitledWindow(Window):
             
             case _:
                 buffer = Buffer(
-                    self.width,
+                    self.width + self.padding.horizontal,
                     1,
                     self.clear_pixel,
                     [
-                        Pixel.changePixel(self._title_pixel, part) for part in Func.setTextAnchor(
+                        Pixel.changePixel(self._title_pixel, symbol=part) for part in Func.setTextAnchor(
                             self._title, 
                             self._title_anchor, 
                             self.width + self.padding.horizontal, 

@@ -1,16 +1,18 @@
-from typing import Union, Iterable, Callable
+from typing import Union, Iterable
 
-from ...Classes import Vec2, Vec3, Vec4, Event, Anchor, Keys
+from ...Classes import Vec2, Vec3, Vec4, Event, Anchor
+from .Label import Label
+from .InteractiveWidget import InteractiveWidget
 from ..Pixel import Pixel
-from .InteractiveLabel import InteractiveLabel
+from ... import Converter
 
 
-class Button(InteractiveLabel):
+class InteractiveLabel(Label, InteractiveWidget):
     def __init__(
-        self,
-        text: str = 'Button',
-        text_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
-        text_anchor: Anchor = Anchor.center,
+        self, 
+        text: str = 'InteractiveWidget',
+        text_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str, None] = None,
+        text_anchor: Anchor = Anchor.left,
         text_max_size: Union[Vec2[int], Iterable[int]] = None,
         size: Union[Vec2[int], Iterable[int]] = None,
         min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
@@ -21,7 +23,6 @@ class Button(InteractiveLabel):
         name: Union[str, None] = None,
         tabindex: Union[int, None] = None,
         select_clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
-        on_press_functions: Union[Iterable[Callable[[], None]], Callable[[], None]] = [],
         can_be_moved: bool = True,
         *args, **kwargs
         ):
@@ -37,24 +38,11 @@ class Button(InteractiveLabel):
             offset_pos=offset_pos, 
             clear_pixel=clear_pixel, 
             name=name, 
-            tabindex=tabindex, 
-            select_clear_pixel=select_clear_pixel, 
             can_be_moved=can_be_moved,
+            tabindex=tabindex,
+            select_clear_pixel=select_clear_pixel,
             *args, **kwargs
         )
-        self._pressed_event = Event(
-            *(on_press_functions if isinstance(on_press_functions, Iterable) else [on_press_functions])
-        )
-        
-    def inputKey(self, key) -> bool:
-        match key:
-            case Keys.ENTER:
-                self.pressed_event.invoke()
 
-            case _:
-                return False
-        return True
+
     
-    @property
-    def pressed_event(self) -> Event:
-        return self._pressed_event

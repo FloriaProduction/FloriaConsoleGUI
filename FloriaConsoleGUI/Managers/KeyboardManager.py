@@ -3,7 +3,7 @@ from typing import Union, Callable
 
 from ..Config import Config
 from ..Log import Log
-
+from ..Classes import Keys
 from ..Classes.Event import Event, EventKwargs
 
 class KeyboardManager:

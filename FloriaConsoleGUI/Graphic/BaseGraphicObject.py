@@ -226,12 +226,11 @@ class BaseGraphicContainerObject(BaseGraphicObject):
         min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
         max_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
         padding: Union[Vec4[int], Iterable[int]] = None,
-        auto_size: bool = False,
         offset_pos: Union[Vec3[int], Iterable[int]] = None, 
         clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
         name: Union[str, None] = None,
         objects: Union[Iterable[BaseGraphicObject], BaseGraphicObject] = [], 
-        direction: Union[Orientation, None] = Orientation.horizontal,
+        direction: Union[Orientation, None] = None,
         gap: int = 0,
         can_be_moved: bool = True,
         *args, **kwargs
@@ -248,22 +247,19 @@ class BaseGraphicContainerObject(BaseGraphicObject):
             *args, **kwargs
         )
         
-        ''' size and pos '''
-        self._auto_size = auto_size
-        
-        ''' events '''
+        # events 
         self.__add_object_event = Event(
             self.setFlagRefresh
         )
         
-        ''' objects '''
+        # objects 
         self._objects: list['BaseGraphicObject'] = []
         for object in Converter.toListObjects(objects):
             self.addObject(object)
         self._direction: Orientation = Converter.toOrientation(direction) if direction is not None else None
         self._gap: int = gap
         
-        ''' buffers '''
+        # buffers 
         self._objects_buffer: Buffer[Pixel] = Buffer.empty
     
     async def refresh(self):
@@ -310,9 +306,9 @@ class BaseGraphicContainerObject(BaseGraphicObject):
                         object_buffer_height += object.height + object.padding.vertical + self.gap
             
             if self._direction is Orientation.horizontal:
-                object_buffer_width -= 1
+                object_buffer_width -= self.gap
             else:
-                object_buffer_height -= 1
+                object_buffer_height -= self.gap
             
             self._objects_buffer = Buffer(
                 object_buffer_width,
