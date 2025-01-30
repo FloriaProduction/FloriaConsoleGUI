@@ -1,0 +1,1 @@
+![Snake](https://github.com/FloriaProduction/FloriaConsoleGUI.github.io/blob/main/static/images/ExampleSnake.jpg?raw=true)
