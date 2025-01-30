@@ -108,13 +108,11 @@ class Drawer:
         
         return Pixel.changePixel(pixel2, symbol=new_symbol)
     
-    
-    _text_buffers_cache: dict[str, Buffer[Pixel]] = {}
     @classmethod
-    async def renderTextBuffer(cls, text: Union[str, Iterable[str]], text_pixel: Pixel = None) -> Buffer[Pixel]:
-        name = f'{text}_{text_pixel}'
-        
-        if name not in cls._text_buffers_cache:
+    def renderTextBuffer(cls, text: Union[str, Iterable[str]], text_pixel: Pixel = None) -> Buffer[Pixel]:        
+        key = cls._genKey(func='frame', text=text, text_pixel=text_pixel)
+
+        if key not in cls._cache:
             lines = text.split('\n') if isinstance(text, str) else text
             lines_mod = [
                 *[line + Config.NEW_LINE_SYMBOL for line in lines[:-1]], 
@@ -131,5 +129,5 @@ class Drawer:
                         x, y, 
                         Pixel.changePixel(buffer[x, y], symbol=lines_mod[y][x])
                     )
-            cls._text_buffers_cache[name] = buffer
-        return cls._text_buffers_cache[name].copy()
+            cls._putToCache(key, buffer)
+        return cls._cache[key].copy()

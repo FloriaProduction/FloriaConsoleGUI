@@ -17,17 +17,29 @@ class GraphicThread(BaseThread):
             pixel if pixel is not None else Pixel.empty 
             for pixel in buffer.data
         ]
- 
-        pixels: list[Pixel] = \
-        [
-            buffer_pixels[i].ANSII if i - i // buffer.width * buffer.width == 0 or not Pixel.compareColors(buffer_pixels[i-1], buffer_pixels[i]) else buffer_pixels[i].symbol 
-            #buffer_data[i].symbol
-            #buffer_data[i].ANSII
-            for i in range(len(buffer_pixels))
+        
+        ansii_pixels = [
+            f'{'ᵃ' if Config.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{pixel.ANSI}' 
+                if (pixel.front_color != previous_pixel.front_color and pixel.back_color != previous_pixel.back_color) else
+            f'\033[{pixel.ANSI_front_color}m{'ᶠ' if Config.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{pixel.symbol}' 
+                if pixel.front_color != previous_pixel.front_color else
+            f'\033[{pixel.ANSI_back_color}m{'ᵇ' if Config.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{pixel.symbol}' 
+                if pixel.back_color != previous_pixel.back_color else
+            f'{pixel.symbol}' 
+            
+            for i, pixel, previous_pixel in 
+            [
+                (
+                    i,
+                    buffer_pixels[i], 
+                    buffer_pixels[i-1]
+                ) for i in range(len(buffer_pixels))
+            ]
         ]
         
         return ''.join([
-            ''.join(pixels[y*buffer.width : y*buffer.width+buffer.width]) + f'{Pixel.clearANSII}\n' for y in range(buffer.height)
+            ''.join(ansii_pixels[y*buffer.width : y*buffer.width+buffer.width]) + f'{Pixel.ANSI_clear}\n' 
+            for y in range(buffer.height)
         ])
         
         
@@ -44,6 +56,13 @@ class GraphicThread(BaseThread):
                 self.__class__._amount_simulation.clearAll()
             
             Config.debug_data.update(self._info)
+            Config.debug_data['len_rendered_text'] = len(rendered_text)
+            Config.debug_data['len_pixels'] = len(buffer)
         
-        sys.stdout.write(f'{'\n' * Config.CLEAR_LINES}{rendered_text}{'; '.join([f'{key}={value}' for key, value in Config.debug_data.items()]) if Config.DEBUG_SHOW_DEBUG_DATA else ''}\n')
+        
+        sys.stdout.write(
+            f'{'\n' * Config.CLEAR_LINES}' + 
+            f'{rendered_text}' + 
+            f'\n{'\n'.join([f'{key}={value}' for key, value in Config.debug_data.items()]) if Config.DEBUG_SHOW_DEBUG_DATA else ''}'
+        )
     

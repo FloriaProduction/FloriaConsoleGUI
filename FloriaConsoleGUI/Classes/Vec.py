@@ -17,7 +17,7 @@ class Vec2(Generic[_T2]):
         self._prop_for_iter: tuple[str] = ['_x', '_y']
     
         self._no_modify: bool = kwargs.get('no_modify', False)
-    
+        
         self._update_event: Event = Event()
         
         if self._no_modify:

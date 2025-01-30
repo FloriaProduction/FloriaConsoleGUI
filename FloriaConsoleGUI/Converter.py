@@ -7,9 +7,11 @@ from .Config import Config
 
 def _toVecX(vec_type: type[any], data: Union[any, Iterable], default: any, allow_none: bool = False) -> any:
     if data is None:
-        return default
+        return vec_type(*default)
     if not isinstance(data, Iterable) or allow_none is False and None in data:
-        raise ValueError()
+        raise ValueError(
+            f'data is not Iterable or data has None\ndata: {data}'
+        )
     return data if isinstance(data, vec_type) else vec_type(*data)
 
 def toVec2(data: Union[Vec2, Iterable], default: Vec2 = Vec2(0, 0), allow_none: bool = False) -> Vec2:
@@ -45,14 +47,18 @@ def toAnchor(anchor: Union[Anchor, str]) -> Anchor:
         return anchor
     elif isinstance(anchor, str):
         return Anchor[anchor]
-    raise ValueError()
+    raise ValueError(
+        f'anchor is not Anchor and str\nanchor: {anchor}'
+    )
 
 def toOrientation(orientation: Union[Orientation, str]) -> Orientation:
     if isinstance(orientation, Orientation):
         return orientation
     elif isinstance(orientation, str):
         return Orientation[orientation]
-    raise ValueError()
+    raise ValueError(
+        f'orientation is not Orientation and str\norientation: {orientation}'
+    )
 
 def toText(text: str) -> str:
     return text.replace('\n', '\\n').replace('\t', ' ' * Config.TAB_LENGTH)

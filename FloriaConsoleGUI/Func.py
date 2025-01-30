@@ -2,6 +2,7 @@ from typing import Union, Callable, overload
 from datetime import datetime, date
 import json
 import time
+import os
 
 from .Classes import Anchor, Vec2, Vec3, Buffer
 from .Graphic.Pixel import Pixel
@@ -50,12 +51,30 @@ def saveJson(path: str, data: dict[str, any]):
 
 
 def calculateSizeByItems(data: list[BaseGraphicObject]) -> tuple[Vec2[int], Vec2[int]]:
-    width = height = 0
+    '''
+        return (
+            Vec2: width, height
+            Vec2: offset_x, offset_y
+        )
+    '''
+    min_x = min_y = width = height = 0
     for item in data:
+        min_x = min(min_x, item.offset_x)
+        min_y = min(min_y, item.offset_y)
+        
         width = max(item.offset_x + item.width + item.padding.horizontal, width)
         height = max(item.offset_y + item.height + item.padding.vertical, height)
     
-    return Vec2(width, height)
+    return (
+        Vec2(
+            width - min_x,
+            height - min_y
+        ),
+        Vec2(
+            -min_x,
+            -min_y
+        ),
+    )
 
 @overload
 def choiseValue(*args: object, default=None) -> Union[object, None]: ...

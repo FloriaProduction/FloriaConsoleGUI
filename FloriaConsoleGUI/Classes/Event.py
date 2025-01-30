@@ -56,6 +56,9 @@ class Event:
                 Log.writeError()
                 if self._await_input:
                     input('Press to continue...')
+    
+    def __len__(self) -> int:
+        return len(self._funcs)
 
 
 class EventKwargs(Event):

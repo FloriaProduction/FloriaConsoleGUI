@@ -14,6 +14,10 @@ class AnimationManager:
     _animations: dict[str, Animation] = {}
 
     @classmethod
+    def exists(cls, name: str) -> bool:
+        return name in cls._animations
+    
+    @classmethod
     def get(cls, name: str) -> Animation:
         if name not in cls._animations:
             raise ValueError(

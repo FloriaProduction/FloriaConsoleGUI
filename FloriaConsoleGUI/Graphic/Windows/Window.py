@@ -1,7 +1,7 @@
-from typing import Union, Iterable
+from typing import Union, Iterable, overload
 
 from ..BaseGraphicObject import BaseGraphicContainerObject
-from ..Pixel import Pixel
+from ..Pixel import *
 from ..Drawer import Drawer
 from ..Widgets.Widget import Widget
 from ..Widgets.InteractiveWidget import InteractiveWidget
@@ -12,46 +12,46 @@ from ... import Func
 
 
 class Window(BaseGraphicContainerObject):    
+    @overload
     def __init__(
         self, 
-        size: Union[Vec2[int], Iterable[int]] = None,
-        min_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
-        max_size: Union[Vec2[Union[int, None]], Iterable[Union[int, None]], None] = None,
-        padding: Union[Vec4[int], Iterable[int]] = None,
-        offset_pos: Union[Vec3[int], Iterable[int]] = None, 
-        clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
-        name: Union[str, None] = None,
+        size: Vec2[int] | Iterable[int] = None,
+        min_size: Vec2[int | None] | Iterable[int | None] | None = None,
+        max_size: Vec2[int | None] | Iterable[int | None] | None = None,
+        size_hint: Vec2[float | None] | Iterable[float | None] | None = None,
+        padding: Vec4[int] | Iterable[int] = None,
+        offset_pos: Vec3[int] | Iterable[int] = None,
+        clear_pixel: Pixel | tuple[Vec3[int] | Iterable[int], Vec3[int] | Iterable[int], str] | str = None,
+        name: str | None = None,
         widgets: Union[Iterable[Widget], Widget] = [], 
-        direction: Union[Orientation, None] = None,
+        size_by_objects: bool = False,
+        objects_direction: Union[Orientation, None] = None,
         gap: int = 0,
-        can_be_moved: bool = True,
-        frame: bool = False,
-        frame_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
+        frame: bool = True,
+        frame_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = Pixels.white_black,
         *args, **kwargs
-    ):
-
-        
-        super().__init__(
-            size=size, 
-            min_size=min_size,
-            max_size=max_size,
-            padding=padding,
-            offset_pos=offset_pos, 
-            clear_pixel=Func.choisePixel(clear_pixel, Pixel.empty), 
-            name=name, 
-            objects=widgets, 
-            direction=direction,
-            gap=gap,
-            can_be_moved=can_be_moved,
-        *args, **kwargs)
+    ): ...
+    
+    def __init__(self, **kwargs):
+        kwargs.update({
+            'objects': kwargs.get('widgets', []),
+            'size_by_objects': kwargs.get('size_by_objects', False)
+        })
+        super().__init__(**kwargs)
         
         ''' events '''
-        self._open_event = Event()
-        self._close_event = Event()
-        self._change_frame_pixel_event = Event()
+        self.__open_event = Event()
+        self.__close_event = Event()
+        self.__change_frame_pixel_event = Event()
+        self.__focus_event = Event(
+            self.focus
+        )
+        self.__blur_event = Event(
+            self.blur
+        )
         
         ''' pixels ''' 
-        self._frame_pixel = Converter.toPixel(frame_pixel)
+        self._frame_pixel = Converter.toPixel(kwargs.get('frame_pixel'), default=Pixels.white_black)
         
         ''' interact_objects '''
         self._select_index: int = 0
@@ -60,8 +60,19 @@ class Window(BaseGraphicContainerObject):
         self.add_object_event.add(self.updateInteractWidgets)
         
         ''' other '''
-        self._frame = frame
-        
+        self._frame = kwargs.get('frame', True)
+    
+    def focus(self):
+        widget = self.getSelectedWidget()
+        if widget:
+            widget.selected = True
+    
+    def blur(self):
+        widget = self.getSelectedWidget()
+        if widget:
+            widget.selected = False
+            
+    
     async def refresh(self):
         await super().refresh()
         
@@ -114,14 +125,14 @@ class Window(BaseGraphicContainerObject):
             return
         
         previous_widget = self.getSelectedWidget()
-        if previous_widget is not None:
+        if previous_widget:
             previous_widget.selected = False
             
         self._select_index = index
         self._normalizeSelectIndex()
         
         next_widget = self.getSelectedWidget()
-        if next_widget is not None:
+        if next_widget:
             next_widget.selected = True
     
     def selectNext(self):
@@ -132,6 +143,15 @@ class Window(BaseGraphicContainerObject):
     
     def inputKey(self, key: str) -> bool:
         match key:
+            # case Keys.CTRL_LEFT:
+            #     self.offset_x -= 1
+            # case Keys.CTRL_RIGHT:
+            #     self.offset_x += 1
+            # case Keys.CTRL_DOWN:
+            #     self.offset_y += 1
+            # case Keys.CTRL_UP:
+            #     self.offset_y -= 1
+            
             case Keys.UP:
                 self.selectPrevious()
                 
@@ -141,17 +161,23 @@ class Window(BaseGraphicContainerObject):
             case _:
                 widget = self.getSelectedWidget()
                 if widget is not None:
-                    return widget.inputKey(key)
-                
+                    input_result = widget.inputKey(key)
+                    widget.input_key_event.invoke(key=key)
+                    return input_result
+                    
+                    
                 return False
         return True
     
+    def getClearPixel(self):
+        return Func.choisePixel(super().getClearPixel(), Pixel.empty)
+    
     @property
     def open_event(self) -> Event:
-        return self._open_event
+        return self.__open_event
     @property
     def close_event(self) -> Event:
-        return self._close_event
+        return self.__close_event
     
     def setFrame(self, value: bool):
         self._frame = value
@@ -174,4 +200,11 @@ class Window(BaseGraphicContainerObject):
 
     @property
     def change_frame_pixel_event(self) -> Event:
-        return self._change_frame_pixel_event
+        return self.__change_frame_pixel_event
+    
+    @property
+    def focus_event(self) -> Event:
+        return self.__focus_event
+    @property
+    def blur_event(self) -> Event:
+        return self.__blur_event

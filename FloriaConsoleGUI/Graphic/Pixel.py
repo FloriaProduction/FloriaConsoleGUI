@@ -1,21 +1,21 @@
 from typing import Union, Iterable, overload
 
-from ..Classes import Vec3
+from ..Classes import Vec3, AnsiColor
 from ..Config import Config
 
 
 class Pixel:
     empty: 'Pixel' = None
-    clearANSII = f'\033[0m'
+    ANSI_clear = f'\033[0m'
     
     def __init__(
         self, 
-        front_color: Union[Vec3[int], Iterable[int]] = None, 
-        back_color: Union[Vec3[int], Iterable[int]] = None, 
+        front_color: Union[Iterable[int], AnsiColor, None] = None, 
+        back_color: Union[Iterable[int], AnsiColor, None] = None, 
         symbol: chr = None
     ):
-        self.front_color = Vec3(*front_color) if isinstance(front_color, Iterable) else front_color
-        self.back_color = Vec3(*back_color) if isinstance(back_color, Iterable) else back_color
+        self.front_color: Union[Vec3[int], AnsiColor, None] = Vec3(*front_color) if isinstance(front_color, Iterable) else front_color
+        self.back_color: Union[Vec3[int], AnsiColor, None] = Vec3(*back_color) if isinstance(back_color, Iterable) else back_color
         self.symbol = symbol if symbol is not None else ' '
         
         if isinstance(self.front_color, int):
@@ -28,7 +28,12 @@ class Pixel:
     
     @staticmethod
     @overload
-    def changePixel(pixel: Union['Pixel', None], symbol: chr = None, front_color: Vec3 = None, back_color: Vec3 = None) -> Union['Pixel', None]: ...
+    def changePixel(
+        pixel: Union['Pixel', None], 
+        symbol: chr, 
+        front_color: Vec3, 
+        back_color: Vec3
+    ) -> Union['Pixel', None]: ...
 
     @staticmethod
     def changePixel(pixel: Union['Pixel', None], **kwargs):
@@ -38,20 +43,29 @@ class Pixel:
         
         new_pixel = pixel.copy() if pixel is not None else Pixel.empty.copy()
         
-        symbol = kwargs.get('symbol')
-        front_color = kwargs.get('front_color')
-        back_color = kwargs.get('back_color')
+        if 'symbol' in kwargs:
+            new_pixel.symbol = kwargs.get('symbol')
         
-        if symbol is not None:
-            new_pixel.symbol = symbol
+        if 'front_color' in kwargs:
+            new_pixel.front_color = kwargs.get('front_color')
         
-        if front_color is not None:
-            new_pixel.front_color = front_color
-        
-        if back_color is not None:
-            new_pixel.back_color = back_color    
+        if 'back_color' in kwargs:
+            new_pixel.back_color = kwargs.get('back_color') 
         
         return new_pixel
+    
+    @overload
+    def change(
+        self, 
+        symbol: chr = None, 
+        front_color: Vec3 = None, 
+        back_color: Vec3 = None
+    ) -> Union['Pixel', None]: ...
+    
+    def change(self, **kwargs) -> Union['Pixel', None]:
+        return Pixel.changePixel(self, **kwargs)
+        
+    
     
     # WIP
     
@@ -78,21 +92,30 @@ class Pixel:
     #     return Pixel.mixStatic(self, col, alpha, symbol, threshold)
     
     @property
-    def ANSII(self) -> str:
-        return f'{self.ANSIICol}{'⌂' if Config.DEBUG_SHOW_ANSIICOLOR_CHARS else ''}{self.symbol}'
+    def ANSI(self) -> str:
+        return f'{self.ANSI_color}{self.symbol}'
     
     @property
-    def ANSIICol(self) -> str:
+    def ANSI_color(self) -> str:
+        if self.back_color is None and self.front_color is None:
+            return self.ANSI_clear
+        return f'\033[{self.ANSI_front_color};{self.ANSI_back_color}m'
+        
+    @property
+    def ANSI_back_color(self) -> str:
         if self.back_color is None:
-            if self.front_color is None:
-                return Pixel.clearANSII
-            else:
-                return f'\033[38;2;{self.front_color.x};{self.front_color.y};{self.front_color.z};49m'
-        else:
-            if self.front_color is None:
-                return f'\033[48;2;{self.back_color.x};{self.back_color.y};{self.back_color.z};39m'
-            else:
-                return f'\033[38;2;{self.front_color.x};{self.front_color.y};{self.front_color.z};48;2;{self.back_color.x};{self.back_color.y};{self.back_color.z}m'
+            return f'49'
+        if isinstance(self.back_color, AnsiColor):
+            return f'{self.back_color.value}'
+        return f'48;2;{';'.join(map(str, self.back_color))}'
+    
+    @property
+    def ANSI_front_color(self) -> str:
+        if self.front_color is None:
+            return f'39'
+        if isinstance(self.front_color, AnsiColor):
+            return f'{self.front_color.value}'
+        return f'38;2;{';'.join(map(str, self.front_color))}'
 
     def getRGB(self) -> tuple[Vec3[int]]:
         '''
@@ -123,19 +146,23 @@ class Pixel:
 Pixel.empty = Pixel()
 
 class Pixels:
-    f_white = Pixel((255, 255, 255))
-    b_white = Pixel(None, (255, 255, 255))
-    f_green = Pixel((0, 255, 0))
-    b_green = Pixel(None, (0, 255, 0))
-    f_gray = Pixel((125, 125, 125))
-    b_gray = Pixel(None, (125, 125, 125))
-    f_black = Pixel((0, 0, 0))
-    b_black = Pixel(None, (0, 0, 0))
-    f_red = Pixel((255, 0, 0))
-    b_red = Pixel(None, (255, 0, 0))
-    f_blue = Pixel((0, 0, 255))
-    b_blue = Pixel(None, (0, 0, 255))
-    f_yellow = Pixel((255, 255, 0))
-    b_yellow = Pixel(None, (255, 255, 0))
-    white_black = Pixel((255, 255, 255))
-    black_white = Pixel((0, 0, 0), (255, 255, 255))
+    f_white = Pixel(AnsiColor.f_white)
+    b_white = Pixel(None, AnsiColor.b_white)
+    f_green = Pixel(AnsiColor.f_green)
+    b_green = Pixel(None, AnsiColor.b_green)
+    f_light_gray = Pixel((192, 192, 192))
+    f_gray = Pixel((128, 128, 128))
+    f_dark_gray = Pixel((64, 64, 64))
+    b_light_gray = Pixel(None, (192, 192, 192))
+    b_gray = Pixel(None, (128, 128, 128))
+    b_dark_gray = Pixel(None, (64, 64, 64))
+    f_black = Pixel(AnsiColor.f_black)
+    b_black = Pixel(None, AnsiColor.b_black)
+    f_red = Pixel(AnsiColor.f_red)
+    b_red = Pixel(None, AnsiColor.b_red)
+    f_blue = Pixel(AnsiColor.f_blue)
+    b_blue = Pixel(None, AnsiColor.b_blue)
+    f_yellow = Pixel(AnsiColor.f_yellow)
+    b_yellow = Pixel(None, AnsiColor.b_yellow)
+    white_black = Pixel(AnsiColor.f_white)
+    black_white = Pixel(AnsiColor.f_black, AnsiColor.b_white)

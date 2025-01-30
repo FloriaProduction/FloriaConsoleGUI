@@ -15,7 +15,7 @@ from . import Func
 
 class Core:   
     initialized_event: Event = Event()
-    term_event: Event = Event()
+    terminated_event: Event = Event()
     
     initialized_all_threads_event = BaseThread.init_all_event
     
@@ -27,7 +27,7 @@ class Core:
     _tasks: list[asyncio.Task] = []
     
     @classmethod
-    def start(cls):
+    def run(cls):
         '''
             run async app
         '''
@@ -58,8 +58,12 @@ class Core:
         cls, 
         graphic_thread: type[GraphicThread] = GraphicThread,
         simulation_thread: type[SimulationThread] = SimulationThread,
-        input_thread: type[InputThread] = InputThread
+        input_thread: type[InputThread] = InputThread,
+        change_current_directory: Union[str, None] = None
     ):
+        if change_current_directory is not None:
+            cls.changeCurrentDirectory(change_current_directory)
+
         if not issubclass(graphic_thread, GraphicThread):
             raise ValueError(f'{graphic_thread} is not subclass GraphicThread')
         if not issubclass(simulation_thread, SimulationThread):
@@ -118,7 +122,7 @@ class Core:
         if cls._inited is False:
             raise RuntimeError('Core was not initialized')
         
-        cls.initialized_event.invoke()
+        cls.terminated_event.invoke()
         
         cls._inited = False
         Log.writeOk('Terminated', cls)
@@ -178,6 +182,16 @@ class Core:
             
             Log.writeOk(f'module "{path}" updated')
             
-    
+    @classmethod
+    def changeCurrentDirectory(cls, path: str):
+        """
+        Change directory to the running python file
 
+        Args:
+            path (`str`): path to runing file, try '__file__'
+        """
+        
+        os.chdir(
+            os.path.dirname(os.path.abspath(path)) + "/"
+        )
              

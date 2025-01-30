@@ -2,7 +2,7 @@ from typing import Union, Iterable
 
 from ..Graphic.Pixel import Pixel
 from ..Graphic.Windows import Window
-from ..Classes import Buffer
+from ..Classes import *
 from .KeyboardManager import KeyboardManager
 from .. import Func
 
@@ -62,6 +62,13 @@ class WindowManager:
         return cls._window_queue[cls._index_current_window]
     
     @classmethod
+    def nextCurrent(cls):
+        if len(cls._window_queue) == 0:
+            return None
+        cls._index_current_window += 1
+        cls._normalizeIndexCurrentWindow()
+    
+    @classmethod
     async def render(cls) -> Union[Buffer[Pixel], None]:
         '''
             if count(windows) == 0
@@ -72,30 +79,40 @@ class WindowManager:
         
         if len(cls._window_queue) == 0:
             return None
-
-        windows: list[tuple[any]] = [
-            ((window.offset_pos.x, window.offset_pos.y), await window.render()) for window in sorted(cls._window_queue, key=lambda window: window.offset_z)
-        ]
         
-        buffer = Buffer(*Func.calculateSizeByItems(cls._window_queue), Pixel.empty)
+        size, offset = Func.calculateSizeByItems(cls._window_queue)
         
-        for window in windows:
-            buffer.paste(*window[0], window[1])
+        buffer = Buffer(
+            *size,
+            Pixel.empty
+        )
+        
+        for window in sorted(cls._window_queue, key=lambda window: window.offset_z):
+            buffer.paste(
+                window.offset_x + offset.x,
+                window.offset_y + offset.y,
+                await window.render()
+            )
         
         return buffer
     
     @classmethod
-    def press(cls, key: str, **kwargs):       
+    def inputKey(cls, key: str, **kwargs):       
         window_current = cls.getCurrent()
         if window_current is None:
             return
         
-        window_current.inputKey(key)
+        match key:
+            case Keys.TAB:
+                cls.nextCurrent()
+            
+            case _:
+                window_current.inputKey(key)
         
     @classmethod
     def _normalizeIndexCurrentWindow(cls):
         cls._index_current_window = Func.normalizeIndex(cls._index_current_window, len(cls._window_queue))
     
 KeyboardManager.pressed_event.add(
-    WindowManager.press
+    WindowManager.inputKey
 )

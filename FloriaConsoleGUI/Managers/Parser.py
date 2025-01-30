@@ -33,6 +33,10 @@ class Parser:
         
     @classmethod
     def checkUpdate(cls):
+        raise NotImplementedError(
+            'Work on the parser is in progress'
+        )
+        
         widgets_module = 'FloriaConsoleGUI.Graphic.Widgets'
         window_module = 'FloriaConsoleGUI.Graphic.Windows'
         temp: dict[str, any] = {}

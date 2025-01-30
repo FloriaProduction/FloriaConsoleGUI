@@ -20,7 +20,7 @@ class BaseThread:
     
     def __init__(self, delay: float = 0.5):
         self._init_event = Event(self.initialization)
-        self._sim_event = Event(self.simulation, error_ignored=True, await_input=True)
+        self._sim_event = Event(self.simulation, await_input=True)
         self._term_event = Event(self.termination)
         self._inited = False
         self._termed = False

@@ -90,25 +90,6 @@ class Buffer(Generic[_T]):
                         y * array_width + x
                     ]
                 )
-        
-        # for y in range(array_height):
-        #     for x in range(array_width):
-        #         xpos, ypos = x + offset_x + padding.left, y + offset_y + padding.top
-                
-        #         if xpos >= self.width - padding.right or xpos < 0 + padding.left or\
-        #             ypos >= self.height - padding.bottom or ypos < 0 + padding.top:
-        #             continue
-                
-        #         self._data[
-        #             ypos * self._size.width + xpos
-        #         ] = func(
-        #             self._data[
-        #                 ypos * self._size.width + xpos
-        #             ],
-        #             array[
-        #                 y * array_width + x
-        #             ]
-        #         )
     
     def paste(
         self, 
@@ -178,45 +159,96 @@ class Buffer(Generic[_T]):
     def convertFunction(
         x: int, 
         y: int, 
-        width: int, 
-        height: int,
+        buffer: 'Buffer',
         item: Union[any, None],
     ):
         return item
     
-    def convert(self, func: Callable[[int, int, int, int, _T], _T]) -> 'Buffer':
+    def convert(self, func: Callable[[int, int, 'Buffer', _T], _T]) -> 'Buffer':
         '''
             Create and convert a buffer\n
             `Don't modify` this buffer, just `create a new one`
         '''
         
-        return Buffer(*self.size, self._defualt_value, 
-        [
+        self_copy = self.copy()
+        
+        return Buffer(
+            *self.size, 
+            self._defualt_value, 
             [
-                func(x, y, self.width, self.height, self.get(x, y)) 
-                for x in range(self.width)
-            ] 
-            for y in range(self.height)
-        ])      
+                func(
+                    i - i // self.width * self.width,
+                    i // self.width, 
+                    self_copy, 
+                    self.get(
+                        i - i // self.width * self.width, 
+                        i // self.width
+                    )
+                ) for i in range(self.width * self.height)
+            ]
+        )      
     
     def resize(self, width: int, height: int) -> 'Buffer':
         '''
             Create a resized copy
-        '''
+        '''      
         if self.size == (width, height):
             return self.copy()
         
-        buffer = Buffer(width, height, self._defualt_value)
+        if width == 0 or self.height == 0:
+            return Buffer(width, height, self._defualt_value)
         
-        for y in range(buffer.height):
-            for x in range(buffer.width):
-                buffer[x, y] = self[
-                    min(max(math.floor(x * (self.width / width)), 0), self.width-1), 
-                    min(max(math.floor(y * (self.height / height)), 0), self.height-1)
+        scale_w, scale_h = self.width / width, self.height / height
+        
+        return Buffer(
+            width, height, 
+            self._defualt_value,
+            [
+                self.get(
+                    min(
+                        max(math.floor(x * scale_w), 0), 
+                        self.width - 1
+                    ), 
+                    min(
+                        max(math.floor(y * scale_h), 0), 
+                        self.height - 1
+                    )
+                )
+                for x, y in [
+                    (i - i // width * width, i // width) for i in range(width * height)
                 ]
-        
-        return buffer
+            ]
+        )
+
     
+    def cropBySize(self, offset_x: int, offset_y: int, width: int, height: int, padding: Vec4[int] = Vec4(0, 0, 0, 0)) -> 'Buffer':
+        offset_x = min(self.width - padding.right, max(0, offset_x) + padding.left) 
+        offset_y = min(self.height - padding.bottom, max(0, offset_y) + padding.top)
+        width = min(self.width - padding.right - offset_x, width)
+        height = min(self.height - padding.bottom - offset_y, height)
+
+        return Buffer(
+            width, height,
+            self._defualt_value,
+            [
+                self.get(
+                    (i - i // width * width) + offset_x,
+                    (i // width) + offset_y
+                )
+                for i in range(width * height)
+            ]
+        )
+        
+    
+    def cropByPoints(self, point1_x: int, point1_y: int, point2_x: int, point2_y: int, padding: Vec4[int] = Vec4(0, 0, 0, 0)) -> 'Buffer':
+        return self.cropBySize(
+            point1_x, 
+            point1_y, 
+            point2_x - point1_x, 
+            point2_y - point1_y,
+            padding
+        )
+
     @property
     def size(self) -> Vec2[int]:
         return self._size
