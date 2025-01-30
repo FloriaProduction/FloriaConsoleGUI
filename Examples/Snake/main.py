@@ -1,53 +1,45 @@
-from typing import Union, Iterable
+from typing import Union, Iterable, overload
 from random import randint as rd
 
 from FloriaConsoleGUI import *
 from FloriaConsoleGUI.Classes import Anchor, Buffer, Vec2, Vec3, Vec4
 from FloriaConsoleGUI.Classes import *
 from FloriaConsoleGUI.Graphic import *
-from FloriaConsoleGUI.Graphic.Pixel import Pixel
 from FloriaConsoleGUI.Graphic.Widgets import *
 from FloriaConsoleGUI.Graphic.Windows import *
 from FloriaConsoleGUI.Managers import *
 
 
 class SnakeWidget(InteractiveWidget):
+    @overload
     def __init__(
         self,
         snake_pixel: Pixel | tuple[Vec3[int] | Iterable[int], Vec3[int] | Iterable[int], str] | str = None, 
-        snake_speed: int = 1, # number moves in second
+        snake_speed: float = 2.5, # number moves in second
         snake_length: int = 3,
         apple_pixel: Pixel | tuple[Vec3[int] | Iterable[int], Vec3[int] | Iterable[int], str] | str = None, 
         text_pixel: Pixel | tuple[Vec3[int] | Iterable[int], Vec3[int] | Iterable[int], str] | str = None, 
         size: Vec2[int] | Iterable[int] = None, 
         min_size: Vec2[int | None] | Iterable[int | None] | None = None,
         max_size: Vec2[int | None] | Iterable[int | None] | None = None, 
+        size_hint: Union[Iterable[Union[float, None]], None] = None,
         padding: Vec4[int] | Iterable[int] = None, 
         offset_pos: Vec3[int] | Iterable[int] = None, 
-        clear_pixel: Pixel | tuple[Vec3[int] | Iterable[int], Vec3[int] | Iterable[int], str] | str = None, 
-        name: str = 'snake_game', 
-        can_be_moved: bool = True, 
-        select_clear_pixel: Union[Pixel, tuple[Union[Vec3[int], Iterable[int]], Union[Vec3[int], Iterable[int]], str], str] = None,
-        tabindex: Union[int, None] = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            size=size,
-            min_size=min_size,
-            max_size=max_size,
-            padding=padding,
-            offset_pos=offset_pos,
-            clear_pixel=clear_pixel,
-            name=name,
-            can_be_moved=can_be_moved,
-            select_clear_pixel=select_clear_pixel,
-            tabindex=tabindex,
-            *args, **kwargs
-        )
-        self._snake_length_initial: int = snake_length
+        pos_hint: Union[Iterable[Union[int, None]], None] = None,
+        clear_pixel: Union[Pixel, tuple[Iterable[int], Iterable[int], str], str] = None,
+        selected_clear_pixel: Union[Pixel, tuple[Iterable[int], Iterable[int], str], str] = None,
+        name: str = 'snake_game',
+        **kwargs
+    ): ...
+    
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         
-        self._snake_delay = 1 / snake_speed
-        self._snake_pixel = Converter.toPixel(snake_pixel, default=Pixel((0, 255, 0), None, '█'))
+        self._snake_length_initial: int = kwargs.get('snake_length', 3)
+        
+        self._snake_delay = 1 / kwargs.get('snake_speed', 2.5)
+        self._snake_pixel = Converter.toPixel(kwargs.get('snake_pixel'), default=Pixel(AnsiColor.f_green, None, '█'))
         self._snake_position: Vec2[int] = None
         self._snake_parts: dict[Vec2[int], Pixel] = None
         self._snake_length: int = None
@@ -56,10 +48,10 @@ class SnakeWidget(InteractiveWidget):
         self.reloadSnake()
         
         self._apple_position: Vec2[int] = None
-        self._apple_pixel = Converter.toPixel(apple_pixel, default=Pixel(None, [255, 0, 0], '@'))
+        self._apple_pixel = Converter.toPixel(kwargs.get('apple_pixel'), default=Pixel(AnsiColor.f_red, None, '♥'))
         self.createApple()
 
-        self._text_pixel = Converter.toPixel(text_pixel, default=Pixel([0, 0, 0], [255, 255, 255]))
+        self._text_pixel = Converter.toPixel(kwargs.get('text_pixel'), default=Pixels.black_white)
 
     def reloadSnake(self):
         self._snake_position = Vec2(self.width//2, self.height//2)
@@ -84,33 +76,21 @@ class SnakeWidget(InteractiveWidget):
     async def refresh(self):
         await super().refresh()
         
-        field = Buffer(
-            *self.size,
-            None
-        )
-        
         for pos, pixel in self._snake_parts.items():
-            field.set(
-                *pos, 
+            self._buffer.set(
+                *(Vec2(*pos) + self.padding[2, 0]),
                 pixel
             )
         
-        field.set(
-            *self._apple_position,
+        self._buffer.set(
+            *(self._apple_position + self.padding[2, 0]),
             self._apple_pixel
-        )
-        
-        self._buffer.paste(
-            self.padding.left, 
-            self.padding.top,
-            field,
-            self.padding
         )
         
         if self.snake_is_dead:
             self._buffer.pasteByAnchor(
                 0, 0, 
-                await Drawer.renderTextBuffer(
+                Drawer.renderTextBuffer(
                     f'{'You win!\n' if self._snake_length >= self.width * self.height else ''}Your score: {self._snake_length - self._snake_length_initial}\nPress Enter\nto restart', 
                     self._text_pixel
                 ),
@@ -119,7 +99,7 @@ class SnakeWidget(InteractiveWidget):
             )
             
     async def simulation(self):
-        if self.snake_is_dead and self.selected:
+        if self.snake_is_dead:
             return
         
         match self._snake_direction:
@@ -205,7 +185,7 @@ class SnakeWidget(InteractiveWidget):
         return True
     
     async def render(self) -> Buffer[Pixel]:
-        if Func.every(f'snake_timer_widget:"{self.name}"', self._snake_delay):
+        if self.selected and Func.every(f'snake_timer_widget:"{self.name}"', self._snake_delay):
             await self.simulation()
         
         return await super().render()
@@ -241,28 +221,33 @@ class SnakeWidget(InteractiveWidget):
     def text_pixel(self, value: Union[Pixel, None]):
         self._text_pixel = value
 
-@Core.initialized_all_threads_event.dec
-def _():
+
+Core.initialized_all_threads_event.add(
+lambda: 
     WindowManager.openNewWindow(
         TitledWindow(
             title='Snake',
-            direction=Orientation.vertical,
-            frame=True,
+            title_style=1,
+            size_by_objects=True,
+            objects_direction=Orientation.vertical,
             widgets=[
                 SnakeWidget(
-                    min_size=(20, 10),
-                    snake_speed=3,
+                    snake_speed=2.5,
+                    size=[25, 10]
                 ),
                 Label(
                     text='Control: wasd',
-                    clear_pixel=Pixel((255, 255, 255), (25, 25, 25)),
-                    min_size=(20, None)
+                    clear_pixel=Pixels.b_dark_gray,
+                    size_hint=[1, None]
                 )
             ]
         )
     )
+)
 
 if __name__ == '__main__':
-    Core.init()
-    Core.start()
+    Core.init(
+        change_current_directory=__file__
+    )
+    Core.run()
     Core.term()
