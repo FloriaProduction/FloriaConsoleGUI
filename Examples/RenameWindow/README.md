@@ -1,0 +1,2 @@
+![RenameWindow_0](https://github.com/FloriaProduction/FloriaConsoleGUI.github.io/blob/main/static/images/ExampleRenameWindow_0.jpg?raw=true)
+![RenameWindow_1](https://github.com/FloriaProduction/FloriaConsoleGUI.github.io/blob/main/static/images/ExampleRenameWindow_1.jpg?raw=true)
